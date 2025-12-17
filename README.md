@@ -43,23 +43,158 @@ This showcases practical, production-aligned data engineering skills while produ
 - **OpenWeather API** – Hourly historical weather data
 - **DLTHub** – Metadata, data quality checks, lineage
 
+## 🏗️ Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph sources["📥 Data Sources"]
+        taxi["🚕 NYC TLC<br/>Trip Records<br/>(Parquet)"]
+        bike["🚴 CitiBike<br/>System Data<br/>(CSV)"]
+        weather["🌤️ OpenWeather<br/>API<br/>(JSON)"]
+    end
+
+    subgraph ingestion["🔄 Ingestion Layer"]
+        airbyte["Airbyte"]
+        python["Python Scripts"]
+    end
+
+    subgraph orchestration["⚙️ Orchestration & Monitoring"]
+        dagster["Dagster<br/>(Pipeline Orchestration)"]
+        dlt["DLTHub<br/>(Metadata & Lineage)"]
+    end
+
+    subgraph dev["💻 Local Development"]
+        duckdb_dev["🦆 DuckDB"]
+        subgraph dbt_dev["dbt Transformations"]
+            bronze_dev["🥉 Bronze"]
+            silver_dev["🥈 Silver"]
+            gold_dev["🥇 Gold"]
+        end
+        tests_dev["✅ dbt Tests"]
+    end
+
+    subgraph prod["☁️ Production Pipeline"]
+        s3["S3 Bucket<br/>(Raw/Staging)"]
+        snowflake["❄️ Snowflake DWH"]
+        subgraph dbt_prod["dbt Transformations"]
+            bronze_prod["🥉 Bronze<br/>(Raw)"]
+            silver_prod["🥈 Silver<br/>(Cleaned & Validated)"]
+            gold_prod["🥇 Gold<br/>(Analytics-Ready)"]
+        end
+        tests_prod["✅ Data Quality<br/>(dbt tests + Great Expectations)"]
+    end
+
+    subgraph ai["🤖 AI Layer"]
+        vectordb["🗄️ Vector DB<br/>(ChromaDB/DuckDB)"]
+        embeddings["🧠 Embeddings"]
+        rag["RAG Pipeline"]
+        api["FastAPI Service"]
+    end
+
+    subgraph analytics["📊 Analytics Layer"]
+        hex["Hex Dashboards"]
+        dbt_docs["📚 dbt Docs"]
+    end
+
+    subgraph cicd["🔧 CI/CD Pipeline"]
+        github["GitHub<br/>(Version Control)"]
+        actions["GitHub Actions"]
+        subgraph tests["Automated Testing"]
+            lint["Linting<br/>(SQLFluff, Ruff)"]
+            unit["Unit Tests"]
+            integration["Integration Tests<br/>(dbt tests)"]
+        end
+        deploy["Deployment"]
+    end
+
+    taxi --> airbyte
+    bike --> python
+    weather --> python
+
+    airbyte --> dagster
+    python --> dagster
+
+    dagster --> dlt
+    dagster -.->|Local Dev| duckdb_dev
+    dagster -->|Production| s3
+
+    github --> actions
+    actions --> lint
+    lint --> unit
+    unit --> integration
+    integration --> deploy
+    deploy -.->|Deploy dbt| dbt_prod
+    deploy -.->|Deploy Dagster| dagster
+    deploy -.->|Deploy API| api
+
+    duckdb_dev --> bronze_dev
+    bronze_dev --> silver_dev
+    silver_dev --> tests_dev
+    tests_dev --> gold_dev
+
+    s3 --> snowflake
+    snowflake --> bronze_prod
+    bronze_prod --> silver_prod
+    silver_prod --> tests_prod
+    tests_prod --> gold_prod
+
+    gold_dev -.->|Testing| hex
+    gold_prod --> hex
+    gold_prod --> dbt_docs
+
+    gold_prod --> embeddings
+    embeddings --> vectordb
+    vectordb --> rag
+    rag --> api
+
+    dlt -.->|Monitors| dbt_dev
+    dlt -.->|Monitors| dbt_prod
+
+    style sources fill:#4a90e2,stroke:#2c5aa0,color:#fff
+    style ingestion fill:#f39c12,stroke:#d68910,color:#fff
+    style orchestration fill:#9b59b6,stroke:#7d3c98,color:#fff
+    style dev fill:#16a085,stroke:#0e6655,color:#fff
+    style prod fill:#27ae60,stroke:#1e8449,color:#fff
+    style ai fill:#e67e22,stroke:#ca6f1e,color:#fff
+    style analytics fill:#e74c3c,stroke:#c0392b,color:#fff
+    style cicd fill:#34495e,stroke:#2c3e50,color:#fff
+    style tests fill:#5d6d7e,stroke:#34495e,color:#fff
+    style dbt_dev fill:#f1c40f,stroke:#d4ac0d,color:#000
+    style dbt_prod fill:#f1c40f,stroke:#d4ac0d,color:#000
+```
+
 ## 🛠️ Technical Stack
 
-- **Ingestion:** Airbyte, Python, DLTHub
-- **Orchestration:** Dagster
-- **Storage:** DuckDB (local), S3-compatible staging, Snowflake (free tier)
-- **Transformations:** dbt (Bronze → Silver → Gold)
-- **Analytics:** Hex dashboards
-- **AI Layer:** FastAPI + Embeddings + RAG
-- **Version Control:** Git + GitHub
+- **Ingestion:** Airbyte, Python Scripts
+- **Orchestration:** Dagster (pipeline scheduling & execution)
+- **Metadata & Lineage:** DLTHub (data quality tracking)
+- **Storage:**
+  - Local: DuckDB
+  - Production: S3 (raw/staging) → Snowflake (data warehouse)
+- **Transformations:** dbt (Bronze → Silver → Gold medallion architecture)
+- **Data Quality:** dbt tests, Great Expectations
+- **Analytics:** Hex dashboards, dbt documentation
+- **AI Layer:**
+  - FastAPI (REST API)
+  - Embeddings (OpenAI/local models)
+  - Vector Database (ChromaDB or DuckDB with vector extension)
+  - RAG Pipeline
+- **CI/CD:**
+  - Version Control: Git + GitHub
+  - Automation: GitHub Actions
+  - Code Quality: SQLFluff (SQL linting), Ruff (Python linting)
+  - Testing: Unit tests, Integration tests, dbt tests
+  - Deployment: Automated deployment to Snowflake, Dagster, and FastAPI
 
 ## 📦 Deliverables
 
-- Automated ingestion pipelines
+- Automated ingestion pipelines (Airbyte + Python)
 - dbt transformation models and documentation
 - Mobility + weather gold fact & dimension tables
-- Interactive Hex dashboards
-- AI Q&A service for mobility analytics
+- Interactive Hex dashboards with weather-mobility insights
+- AI Q&A service for mobility analytics (FastAPI + RAG)
+- CI/CD pipelines with automated testing and deployment
+- Comprehensive data quality testing suite
 - Architecture diagrams & project documentation
 
 ## 🚀 MVP Roadmap
@@ -106,10 +241,25 @@ This showcases practical, production-aligned data engineering skills while produ
 **Includes:**
 - FastAPI service
 - Embeddings for gold datasets
+- Vector database setup (ChromaDB/DuckDB)
 - RAG pipeline for answering analytics questions
 - Example: "How does rainfall affect CitiBike demand?"
 
 **Success:** API returns accurate insights for natural-language queries.
+
+### MVP 5 — CI/CD & Production Hardening
+
+**Goal:** Automate testing and deployment for production reliability.
+
+**Includes:**
+- GitHub Actions workflows for CI/CD
+- Automated linting (SQLFluff for SQL, Ruff for Python)
+- Unit and integration test suites
+- Automated dbt testing in CI pipeline
+- Deployment automation for Dagster, dbt, and FastAPI
+- Environment management (dev/staging/prod)
+
+**Success:** Code changes automatically tested and deployed; production pipeline runs reliably.
 
 ## 📅 High-Level Timeline
 
@@ -119,10 +269,13 @@ This showcases practical, production-aligned data engineering skills while produ
 | MVP 2 | 1–2 weeks |
 | MVP 3 | 2 weeks |
 | MVP 4 | 1–2 weeks |
+| MVP 5 | 1 week |
 
 ## 🔮 Optional Future Enhancements
 
-- Demand forecasting using ML
-- Real-time ingestion (Kafka simulation)
-- CI/CD for dbt + Dagster
-- Public web UI integrating dashboard + AI assistant
+- **ML Forecasting:** Demand prediction models for taxi/bike usage
+- **Real-time Streaming:** Kafka/Kinesis integration for live data ingestion
+- **Advanced Monitoring:** DataDog/Grafana dashboards for pipeline observability
+- **Public Web UI:** React/Next.js frontend integrating dashboards + AI chat
+- **Multi-region Deployment:** Geographic data partitioning and distribution
+- **Cost Optimization:** Automated query optimization and resource scaling
