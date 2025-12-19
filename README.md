@@ -186,6 +186,69 @@ flowchart TB
   - Testing: Unit tests, Integration tests, dbt tests
   - Deployment: Automated deployment to Snowflake, Dagster, and FastAPI
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.11 or higher
+- Poetry (Python dependency management)
+- Git
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/nyc-mobility-weather-analytics.git
+   cd nyc-mobility-weather-analytics
+   ```
+
+2. **Run the setup script**
+   ```bash
+   chmod +x scripts/setup/init_env.sh
+   ./scripts/setup/init_env.sh
+   ```
+
+3. **Configure environment variables**
+   ```bash
+   # Edit .env and add your API keys
+   # At minimum, set OPENWEATHER_API_KEY
+   ```
+
+4. **Verify installation**
+   ```bash
+   poetry run pytest
+   ```
+
+For detailed setup instructions, see [docs/setup.md](docs/setup.md).
+
+## 📁 Project Structure
+
+```
+nyc-mobility-weather-analytics/
+├── .github/workflows/      # GitHub Actions CI/CD
+├── config/                 # Configuration files
+│   ├── dbt/               # dbt profiles
+│   └── dagster/           # Dagster configs
+├── data/                  # Local data storage (gitignored)
+│   ├── raw/              # Raw downloaded data
+│   ├── bronze/           # Bronze layer outputs
+│   ├── silver/           # Silver layer outputs
+│   └── gold/             # Gold layer outputs
+├── docs/                  # Documentation
+├── notebooks/             # Jupyter notebooks for exploration
+├── scripts/               # Utility and setup scripts
+├── src/                   # Source code
+│   ├── ingestion/        # Data ingestion scripts
+│   ├── api/              # FastAPI service
+│   └── utils/            # Shared utilities
+├── tests/                 # Test suite
+│   ├── unit/             # Unit tests
+│   └── integration/      # Integration tests
+├── dbt/                   # dbt project (MVP 2)
+├── dagster/               # Dagster pipelines (MVP 2)
+└── pyproject.toml        # Poetry configuration
+```
+
 ## 📦 Deliverables
 
 - Automated ingestion pipelines (Airbyte + Python)

@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+poetry.lock
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+*.cover
+.hypothesis/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Environment Variables
+.env
+.env.*
+!.env.template
+
+# Data Files
+data/
+*.csv
+*.parquet
+*.duckdb
+*.duckdb.wal
+*.db
+*.sqlite
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/dbt_modules/
+
+# Dagster
+dagster/tmp/
+dagster/logs/
+dagster_home/
+
+# ML/AI
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+models/
+embeddings/
+*.pt
+*.pth
+chroma_db/
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Poetry
+poetry.toml
