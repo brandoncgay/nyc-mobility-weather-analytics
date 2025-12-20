@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Mobility Data Model - ERD</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .metadata {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+        }
+        .metadata h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .note {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NYC Mobility & Weather Analytics - Entity Relationship Diagram</h1>
+
+        <div class="metadata">
+            <h3>📊 Dataset Overview</h3>
+            <p><strong>Time Period:</strong> October - November 2025</p>
+            <p><strong>Data Sources:</strong> NYC TLC (Taxi & For-Hire Vehicles), CitiBike, Open-Meteo Weather API</p>
+            <p><strong>Total Records:</strong> 12,475,274</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h4>YELLOW TAXI</h4>
+                <div class="value">8.6M</div>
+                <div class="label">trips • Oct-Nov 2025</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <h4>FOR-HIRE VEHICLES</h4>
+                <div class="value">2.4M</div>
+                <div class="label">trips • Oct 2025</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <h4>CITIBIKE</h4>
+                <div class="value">1.4M</div>
+                <div class="label">trips • Oct-Nov 2025</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <h4>WEATHER</h4>
+                <div class="value">1,464</div>
+                <div class="label">hourly records • Oct-Nov 2025</div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Join Coverage:</strong> All trip tables join to weather data on hourly grain with <strong>100% coverage</strong> using <code>DATE_TRUNC('hour', timestamp)</code>
+        </div>
+
+        <h2>Entity Relationship Diagram</h2>
+        <div class="mermaid">
+erDiagram
+    YELLOW_TAXI ||--o{ HOURLY_WEATHER : "joins on hour"
+    FHV_TAXI ||--o{ HOURLY_WEATHER : "joins on hour"
+    CITIBIKE_TRIPS ||--o{ HOURLY_WEATHER : "joins on hour"
+
+    YELLOW_TAXI {
+        bigint vendor_id
+        timestamp tpep_pickup_datetime PK
+        timestamp tpep_dropoff_datetime
+        bigint passenger_count
+        double trip_distance
+        bigint ratecode_id
+        varchar store_and_fwd_flag
+        bigint pu_location_id FK
+        bigint do_location_id FK
+        bigint payment_type
+        double fare_amount
+        double extra
+        double mta_tax
+        double tip_amount
+        double tolls_amount
+        double improvement_surcharge
+        double total_amount
+        double congestion_surcharge
+        double airport_fee
+        double cbd_congestion_fee
+    }
+
+    FHV_TAXI {
+        varchar dispatching_base_num
+        timestamp pickup_datetime PK
+        timestamp drop_off_datetime
+        varchar affiliated_base_number
+        bigint p_ulocation_id FK
+        bigint d_olocation_id FK
+    }
+
+    CITIBIKE_TRIPS {
+        varchar ride_id PK
+        varchar rideable_type
+        timestamp started_at
+        timestamp ended_at
+        varchar start_station_name
+        varchar start_station_id FK
+        varchar end_station_name
+        varchar end_station_id FK
+        double start_lat
+        double start_lng
+        double end_lat
+        double end_lng
+        varchar member_casual
+    }
+
+    HOURLY_WEATHER {
+        timestamp timestamp PK
+        double temp
+        double feels_like
+        bigint humidity
+        double dew_point
+        double precipitation
+        double rain
+        double snowfall
+        bigint cloud_cover
+        double pressure
+        double wind_speed
+        bigint wind_direction
+    }
+        </div>
+
+        <h2>Join Relationships</h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>Trip → Weather Joins (Hourly Grain)</h3>
+            <pre style="background-color: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; overflow-x: auto;">
+-- Yellow Taxi + Weather
+SELECT y.*, w.*
+FROM raw_data.yellow_taxi y
+LEFT JOIN raw_data.hourly_weather w
+    ON DATE_TRUNC('hour', y.tpep_pickup_datetime) = DATE_TRUNC('hour', w.timestamp)
+
+-- FHV + Weather
+SELECT f.*, w.*
+FROM raw_data.fhv_taxi f
+LEFT JOIN raw_data.hourly_weather w
+    ON DATE_TRUNC('hour', f.pickup_datetime) = DATE_TRUNC('hour', w.timestamp)
+
+-- CitiBike + Weather
+SELECT c.*, w.*
+FROM raw_data.trips c
+LEFT JOIN raw_data.hourly_weather w
+    ON DATE_TRUNC('hour', c.started_at) = DATE_TRUNC('hour', w.timestamp)</pre>
+        </div>
+
+        <h2>Data Grains</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <thead>
+                <tr style="background-color: #4CAF50; color: white;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Table</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Grain</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Primary Key</th>
+                    <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Row Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>Yellow Taxi</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">One row per taxi trip</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><code>tpep_pickup_datetime</code></td>
+                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">8,610,143</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>FHV</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">One row per FHV trip</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><code>pickup_datetime</code></td>
+                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">2,446,615</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>CitiBike</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">One row per bike trip</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><code>ride_id</code></td>
+                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">1,417,052</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>Weather</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">One row per hour</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;"><code>timestamp</code></td>
+                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">1,464</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note" style="background-color: #d1ecf1; border-color: #bee5eb;">
+            <strong>✅ Data Quality:</strong> All datasets have 100% join coverage with weather data. No temporal gaps in Oct-Nov 2025 period.
+        </div>
+
+        <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; text-align: center;">
+            <p>Generated: December 2024 | NYC Mobility & Weather Analytics Project</p>
+            <p>Data Sources: NYC TLC, CitiBike, Open-Meteo | Storage: DuckDB</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#4CAF50',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#388E3C',
+                lineColor: '#666',
+                secondaryColor: '#FFC107',
+                tertiaryColor: '#2196F3'
+            }
+        });
+    </script>
+</body>
+</html>

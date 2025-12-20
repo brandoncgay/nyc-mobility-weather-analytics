@@ -289,18 +289,107 @@ poetry run python
 
 ### What Gets Loaded
 
-The pipeline loads data for Q4 2023 (October-December) by default:
+The pipeline loads data for October-November 2025 by default:
 
-- **Yellow Taxi**: ~3M trips from NYC TLC Trip Records
-- **FHV (For-Hire Vehicles)**: ~15M trips (Uber, Lyft, etc.)
-- **CitiBike**: ~1.5M bike trips
-- **Weather**: 2,208 hourly weather records (92 days × 24 hours)
+- **Yellow Taxi**: 8.6M trips from NYC TLC Trip Records
+- **FHV (For-Hire Vehicles)**: 2.4M trips (Uber, Lyft, etc.)
+- **CitiBike**: 1.4M bike trips
+- **Weather**: 1,464 hourly weather records (61 days × 24 hours from Open-Meteo API)
+
+**Total: 12.5M records**
 
 All data is stored in `data/nyc_mobility.duckdb` in the `raw_data` schema:
 - `raw_data.yellow_taxi`
 - `raw_data.fhv_taxi`
 - `raw_data.trips` (CitiBike)
 - `raw_data.hourly_weather`
+
+### Data Model & Entity Relationship Diagram
+
+The data model consists of 3 trip-level fact tables (Yellow Taxi, FHV, CitiBike) that join to 1 time-series dimension table (Weather) on an hourly grain.
+
+```mermaid
+erDiagram
+    YELLOW_TAXI ||--o{ HOURLY_WEATHER : "joins on hour"
+    FHV_TAXI ||--o{ HOURLY_WEATHER : "joins on hour"
+    CITIBIKE_TRIPS ||--o{ HOURLY_WEATHER : "joins on hour"
+
+    YELLOW_TAXI {
+        bigint vendor_id
+        timestamp tpep_pickup_datetime PK
+        timestamp tpep_dropoff_datetime
+        bigint passenger_count
+        double trip_distance
+        bigint ratecode_id
+        varchar store_and_fwd_flag
+        bigint pu_location_id FK
+        bigint do_location_id FK
+        bigint payment_type
+        double fare_amount
+        double extra
+        double mta_tax
+        double tip_amount
+        double tolls_amount
+        double improvement_surcharge
+        double total_amount
+        double congestion_surcharge
+        double airport_fee
+        double cbd_congestion_fee
+    }
+
+    FHV_TAXI {
+        varchar dispatching_base_num
+        timestamp pickup_datetime PK
+        timestamp drop_off_datetime
+        varchar affiliated_base_number
+        bigint p_ulocation_id FK
+        bigint d_olocation_id FK
+    }
+
+    CITIBIKE_TRIPS {
+        varchar ride_id PK
+        varchar rideable_type
+        timestamp started_at
+        timestamp ended_at
+        varchar start_station_name
+        varchar start_station_id FK
+        varchar end_station_name
+        varchar end_station_id FK
+        double start_lat
+        double start_lng
+        double end_lat
+        double end_lng
+        varchar member_casual
+    }
+
+    HOURLY_WEATHER {
+        timestamp timestamp PK
+        double temp
+        double feels_like
+        bigint humidity
+        double dew_point
+        double precipitation
+        double rain
+        double snowfall
+        bigint cloud_cover
+        double pressure
+        double wind_speed
+        bigint wind_direction
+    }
+```
+
+**Join Pattern (Hourly Grain):**
+```sql
+-- All trip tables join to weather using DATE_TRUNC('hour', ...)
+SELECT trips.*, weather.*
+FROM raw_data.yellow_taxi trips
+LEFT JOIN raw_data.hourly_weather weather
+    ON DATE_TRUNC('hour', trips.tpep_pickup_datetime) = DATE_TRUNC('hour', weather.timestamp)
+```
+
+**Join Coverage:** ✅ All datasets have **100% coverage** - every trip has corresponding weather data.
+
+For detailed data model documentation, see [docs/data_model.md](docs/data_model.md).
 
 ### Running Tests
 
@@ -373,12 +462,13 @@ nyc-mobility-weather-analytics/
 
 **Deliverables:**
 - DLT ingestion pipeline for taxi, CitiBike, and weather data
-- DuckDB database with Q4 2023 data (~60M total records)
-- 3 Jupyter notebooks for validation, quality assessment, and exploration
-- Unit and integration tests with 90%+ coverage
+- DuckDB database with Oct-Nov 2025 data (12.5M total records)
+- ERD and comprehensive data model documentation
+- 3 executed Jupyter notebooks with validation, quality assessment, and exploratory analysis
+- Unit and integration tests
 - Complete documentation in README
 
-**Success:** ✅ All datasets ingested; basic joins & trends validated. Ready for MVP 2!
+**Success:** ✅ All datasets ingested; 100% join coverage validated; data quality confirmed. Ready for MVP 2!
 
 ### MVP 2 — ELT Pipeline + Medallion Architecture in DuckDB
 
