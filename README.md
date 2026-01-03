@@ -385,7 +385,9 @@ LEFT JOIN raw_data.hourly_weather weather
 
 **Spatial Accuracy:** Weather data is from a single station in Lower Manhattan. Accuracy is excellent for core Manhattan/Brooklyn (1-3°F variance) and good for city-wide trends. See [docs/data_model.md](docs/data_model.md) for detailed spatial accuracy analysis.
 
-For complete data model documentation, see [docs/data_model.md](docs/data_model.md).
+**Documentation:**
+- [Data Model & ERD](docs/data_model.md) - Entity relationships and join patterns
+- [Data Dictionary](docs/data_dictionary.md) - Complete column-level documentation for all tables
 
 ### Running Tests
 
