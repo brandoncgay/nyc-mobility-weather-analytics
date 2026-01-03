@@ -31,8 +31,15 @@ def weather_source(year: int, months: list[int], api_key: str = None):
     def hourly_weather() -> Iterator:
         """Fetch hourly historical weather data from Open-Meteo API.
 
-        NYC coordinates: 40.7128°N, 74.0060°W
+        NYC coordinates: 40.7128°N, 74.0060°W (Lower Manhattan)
         Open-Meteo API is completely free and requires no API key.
+
+        Spatial Accuracy Note:
+        - Uses single weather station for entire NYC area
+        - Accurate within 1-3°F for core Manhattan/Brooklyn (3-8 miles)
+        - Temp variance increases up to 5-10°F for outer boroughs (15-20 miles)
+        - Suitable for city-wide trends; limited for neighborhood-level analysis
+        - See docs/data_model.md for detailed spatial accuracy assessment
         """
         lat, lon = 40.7128, -74.0060  # NYC coordinates
         api_url = "https://archive-api.open-meteo.com/v1/archive"

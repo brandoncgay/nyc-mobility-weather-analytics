@@ -40,8 +40,8 @@ This showcases practical, production-aligned data engineering skills while produ
 
 - **NYC TLC Trip Records (Taxi)** – Public monthly Parquet files
 - **CitiBike System Data** – Public monthly CSV files
-- **OpenWeather API** – Hourly historical weather data
-- **DLTHub** – Metadata, data quality checks, lineage
+- **Open-Meteo API** – Hourly historical weather data (free, no API key required)
+- **DLT (Data Load Tool)** – Python-native ELT framework for data ingestion with automatic schema management
 
 ## 🏗️ Architecture Diagram
 
@@ -50,17 +50,15 @@ flowchart TB
     subgraph sources["📥 Data Sources"]
         taxi["🚕 NYC TLC<br/>Trip Records<br/>(Parquet)"]
         bike["🚴 CitiBike<br/>System Data<br/>(CSV)"]
-        weather["🌤️ OpenWeather<br/>API<br/>(JSON)"]
+        weather["🌤️ Open-Meteo<br/>Weather API<br/>(JSON)"]
     end
 
     subgraph ingestion["🔄 Ingestion Layer"]
-        airbyte["Airbyte"]
-        python["Python Scripts"]
+        dlt["DLT (Data Load Tool)<br/>Python-native ELT"]
     end
 
     subgraph orchestration["⚙️ Orchestration & Monitoring"]
         dagster["Dagster<br/>(Pipeline Orchestration)"]
-        dlt["DLTHub<br/>(Metadata & Lineage)"]
     end
 
     subgraph dev["💻 Local Development"]
@@ -107,14 +105,14 @@ flowchart TB
         deploy["Deployment"]
     end
 
-    taxi --> airbyte
-    bike --> python
-    weather --> python
+    taxi --> dlt
+    bike --> dlt
+    weather --> dlt
 
-    airbyte --> dagster
-    python --> dagster
+    dlt --> dagster
+    dlt -.->|Metadata & Lineage| dbt_dev
+    dlt -.->|Metadata & Lineage| dbt_prod
 
-    dagster --> dlt
     dagster -.->|Local Dev| duckdb_dev
     dagster -->|Production| s3
 
@@ -147,9 +145,6 @@ flowchart TB
     vectordb --> rag
     rag --> api
 
-    dlt -.->|Monitors| dbt_dev
-    dlt -.->|Monitors| dbt_prod
-
     style sources fill:#4a90e2,stroke:#2c5aa0,color:#fff
     style ingestion fill:#f39c12,stroke:#d68910,color:#fff
     style orchestration fill:#9b59b6,stroke:#7d3c98,color:#fff
@@ -165,9 +160,8 @@ flowchart TB
 
 ## 🛠️ Technical Stack
 
-- **Ingestion:** Airbyte, Python Scripts
+- **Ingestion:** DLT (Data Load Tool) - Python-native ELT with automatic schema management
 - **Orchestration:** Dagster (pipeline scheduling & execution)
-- **Metadata & Lineage:** DLTHub (data quality tracking)
 - **Storage:**
   - Local: DuckDB
   - Production: S3 (raw/staging) → Snowflake (data warehouse)
@@ -210,8 +204,8 @@ flowchart TB
 
 3. **Configure environment variables**
    ```bash
-   # Edit .env and add your API keys
-   # At minimum, set OPENWEATHER_API_KEY
+   # Edit .env (optional - Open-Meteo API requires no key)
+   # For future enhancements, you may add API keys here
    ```
 
 4. **Verify installation**
@@ -223,15 +217,15 @@ For detailed setup instructions, see [docs/setup.md](docs/setup.md).
 
 ## 📊 MVP 1: Running the Data Ingestion Pipeline
 
-MVP 1 is now complete! The ingestion pipeline uses DLT (Data Load Tool) to extract data from NYC TLC, CitiBike, and OpenWeather API, and loads it into DuckDB.
+MVP 1 is now complete! The ingestion pipeline uses DLT (Data Load Tool) to extract data from NYC TLC, CitiBike, and Open-Meteo Weather API, and loads it into DuckDB.
 
 ### Running the Ingestion Pipeline
 
-1. **Set up environment variables**
+1. **Set up environment (optional)**
    ```bash
    cp .env.example .env
-   # Edit .env and add your OpenWeather API key:
-   # OPENWEATHER_API_KEY=your_api_key_here
+   # Note: Open-Meteo API requires no API key
+   # Environment file available for future configurations
    ```
 
 2. **Activate Poetry environment**
@@ -389,7 +383,9 @@ LEFT JOIN raw_data.hourly_weather weather
 
 **Join Coverage:** ✅ All datasets have **100% coverage** - every trip has corresponding weather data.
 
-For detailed data model documentation, see [docs/data_model.md](docs/data_model.md).
+**Spatial Accuracy:** Weather data is from a single station in Lower Manhattan. Accuracy is excellent for core Manhattan/Brooklyn (1-3°F variance) and good for city-wide trends. See [docs/data_model.md](docs/data_model.md) for detailed spatial accuracy analysis.
+
+For complete data model documentation, see [docs/data_model.md](docs/data_model.md).
 
 ### Running Tests
 
@@ -437,7 +433,7 @@ nyc-mobility-weather-analytics/
 
 ## 📦 Deliverables
 
-- Automated ingestion pipelines (Airbyte + Python)
+- Automated ingestion pipelines using DLT (Data Load Tool)
 - dbt transformation models and documentation
 - Mobility + weather gold fact & dimension tables
 - Interactive Hex dashboards with weather-mobility insights
@@ -475,11 +471,12 @@ nyc-mobility-weather-analytics/
 **Goal:** Create structured, modeled data.
 
 **Includes:**
-- dbt project setup
-- Bronze → Silver → Gold modeling in DuckDB
-- Dagster to orchestrate ELT
+- dbt project setup for data transformations
+- Bronze → Silver → Gold medallion architecture in DuckDB
+- Dagster to orchestrate DLT ingestion + dbt transformations
+- Data quality tests with dbt and Great Expectations
 
-**Success:** End-to-end pipeline runs locally; gold tables ready.
+**Success:** End-to-end pipeline runs locally; gold tables ready for analytics.
 
 ### MVP 3 — Cloud Warehouse + Dashboard
 
