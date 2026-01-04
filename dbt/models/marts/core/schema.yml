@@ -247,3 +247,158 @@ models:
           - not_null
           - accepted_values:
               values: [true, false]
+
+  - name: fct_trips
+    description: |
+      **SILVER LAYER - Trips Fact Table**
+
+      Authoritative trips fact table with ALL business logic for trip metrics.
+      Grain: One row per trip (all modalities).
+      Total trips: ~12.5M (8.6M yellow taxi + 2.4M FHV + 1.4M CitiBike).
+
+      **Business Logic Applied:**
+      - Trip duration calculations
+      - Speed calculations
+      - Time-based attributes and flags
+      - Weather enrichment via join to dim_weather
+      - Foreign keys to all dimensions
+
+    columns:
+      - name: trip_key
+        description: "Surrogate key for trip"
+        tests:
+          - unique
+          - not_null
+
+      - name: trip_id
+        description: "Degenerate dimension - original trip ID"
+        tests:
+          - not_null
+
+      - name: trip_type
+        description: "Type of trip (yellow_taxi, fhv, citibike)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['yellow_taxi', 'fhv', 'citibike']
+
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "Foreign key to dim_date"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: time_key
+        description: "Foreign key to dim_time"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+
+      - name: trip_duration_minutes
+        description: "BUSINESS LOGIC: Calculated trip duration in minutes"
+        tests:
+          - not_null
+
+      - name: day_part
+        description: "BUSINESS LOGIC: Time of day category"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['morning', 'afternoon', 'evening', 'night']
+
+      - name: is_weekend
+        description: "BUSINESS LOGIC: Weekend flag"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_rush_hour
+        description: "BUSINESS LOGIC: Rush hour flag"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: temp_category
+        description: "Weather temperature category from dim_weather"
+        tests:
+          - accepted_values:
+              values: ['cold', 'cool', 'mild', 'warm', 'hot']
+
+      - name: precipitation_type
+        description: "Precipitation type from dim_weather"
+        tests:
+          - accepted_values:
+              values: ['none', 'rain', 'snow', 'mixed']
+
+  - name: fct_hourly_mobility
+    description: |
+      **SILVER LAYER - Hourly Mobility Fact Table**
+
+      Authoritative hourly aggregated mobility metrics.
+      Grain: One row per hour per trip_type.
+
+      **Business Logic Applied:**
+      - Trip count aggregations
+      - Revenue aggregations
+      - Mode share calculations
+      - Rush hour metrics
+      - Weather-mobility relationships
+
+    columns:
+      - name: hour_timestamp
+        description: "Hour timestamp"
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "Foreign key to dim_date"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: time_key
+        description: "Foreign key to dim_time"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+
+      - name: trip_count
+        description: "BUSINESS LOGIC: Total trips in hour"
+        tests:
+          - not_null
+
+      - name: trip_type
+        description: "Type of trip"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['yellow_taxi', 'fhv', 'citibike']
+
+      - name: citibike_mode_share_pct
+        description: "BUSINESS LOGIC: CitiBike mode share percentage"
+
+      - name: yellow_taxi_mode_share_pct
+        description: "BUSINESS LOGIC: Yellow taxi mode share percentage"
+
+      - name: fhv_mode_share_pct
+        description: "BUSINESS LOGIC: FHV mode share percentage"

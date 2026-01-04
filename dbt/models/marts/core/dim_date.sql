@@ -16,8 +16,8 @@ with date_spine as (
     {{
         dbt_utils.date_spine(
             datepart="day",
-            start_date="cast('2023-10-01' as date)",
-            end_date="cast('2023-12-31' as date)"
+            start_date="cast('2025-09-01' as date)",
+            end_date="cast('2025-12-31' as date)"
         )
     }}
 ),
@@ -25,10 +25,10 @@ with date_spine as (
 date_dimension as (
     select
         -- Surrogate key
-        cast(date_day as varchar) as date_key,
+        cast(cast(date_day as date) as varchar) as date_key,
 
         -- Date value
-        date_day as date,
+        cast(date_day as date) as date,
 
         -- Year attributes
         extract(year from date_day) as year,

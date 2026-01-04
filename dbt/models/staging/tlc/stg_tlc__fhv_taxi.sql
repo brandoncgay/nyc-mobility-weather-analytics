@@ -14,6 +14,7 @@ cleaned as (
         -- Generate surrogate key for trips
         {{ dbt_utils.generate_surrogate_key([
             'pickup_datetime',
+            'drop_off_datetime',
             'dispatching_base_num',
             'p_ulocation_id'
         ]) }} as trip_id,
@@ -31,7 +32,18 @@ cleaned as (
         cast(d_olocation_id as integer) as dropoff_location_id
 
     from source
+    where pickup_datetime >= '2025-01-01'  -- Filter out old data
     -- Remove DLT metadata columns automatically by explicit select
+),
+
+deduplicated as (
+    select
+        *,
+        row_number() over (
+            partition by pickup_datetime, dropoff_datetime, dispatching_base_num, pickup_location_id
+            order by dispatching_base_num
+        ) as row_num
+    from cleaned
 )
 
-select * from cleaned
+select * exclude (row_num) from deduplicated where row_num = 1
