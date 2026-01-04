@@ -1,0 +1,249 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: |
+      **SILVER LAYER - Date Dimension**
+
+      Authoritative calendar dimension with business logic for date attributes.
+      Covers Oct 1 - Dec 31, 2023 (92 days).
+
+      **Business Logic Applied:**
+      - Weekend/weekday flags
+      - Month/quarter/year start/end flags
+      - Calendar attributes (week of month, day of year, etc.)
+
+    columns:
+      - name: date_key
+        description: "Surrogate key (YYYY-MM-DD format)"
+        tests:
+          - unique
+          - not_null
+
+      - name: date
+        description: "Date value"
+        tests:
+          - not_null
+
+      - name: is_weekend
+        description: "BUSINESS LOGIC: True if Saturday or Sunday"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_weekday
+        description: "BUSINESS LOGIC: True if Monday-Friday"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: day_of_week
+        description: "Day of week (0=Sunday, 6=Saturday)"
+        tests:
+          - not_null
+
+  - name: dim_time
+    description: |
+      **SILVER LAYER - Time Dimension**
+
+      Authoritative time dimension with business logic for hour-of-day categorizations.
+      Hourly grain (24 hours, 0-23).
+
+      **Business Logic Applied:**
+      - Day part categorization (morning/afternoon/evening/night)
+      - Rush hour flags (7-9am, 5-7pm)
+      - Business hours flags (9am-5pm)
+      - Dining hours, late night flags
+
+    columns:
+      - name: time_key
+        description: "Surrogate key (hour 0-23)"
+        tests:
+          - unique
+          - not_null
+
+      - name: hour
+        description: "Hour in 24-hour format (0-23)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+
+      - name: day_part
+        description: "BUSINESS LOGIC: Time of day (morning/afternoon/evening/night)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['morning', 'afternoon', 'evening', 'night']
+
+      - name: is_rush_hour
+        description: "BUSINESS LOGIC: True if 7-9am or 5-7pm"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_business_hours
+        description: "BUSINESS LOGIC: True if 9am-5pm"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+  - name: dim_weather
+    description: |
+      **SILVER LAYER - Weather Dimension**
+
+      Authoritative weather dimension with ALL business logic for weather categorizations.
+      Hourly grain matching source data.
+
+      **Business Logic Applied:**
+      - Temperature categorizations (cold/cool/mild/warm/hot)
+      - Precipitation type and intensity
+      - Wind categorizations (calm/breezy/windy/strong)
+      - Cloud cover categories
+      - Comfort/safety flags (pleasant, adverse, good cycling weather)
+      - Overall weather descriptions
+      - Unit conversions (Celsius to Fahrenheit, m/s to mph)
+
+    columns:
+      - name: weather_key
+        description: "Surrogate key (timestamp)"
+        tests:
+          - unique
+          - not_null
+
+      - name: timestamp
+        description: "Hour timestamp"
+        tests:
+          - not_null
+
+      - name: temp
+        description: "Temperature in Celsius"
+        tests:
+          - not_null
+
+      - name: temp_category
+        description: "BUSINESS LOGIC: Temperature category (cold/cool/mild/warm/hot)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['cold', 'cool', 'mild', 'warm', 'hot']
+
+      - name: precipitation_type
+        description: "BUSINESS LOGIC: Precipitation type (none/rain/snow/mixed)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['none', 'rain', 'snow', 'mixed']
+
+      - name: precipitation_intensity
+        description: "BUSINESS LOGIC: Precipitation intensity (none/light/moderate/heavy/extreme)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['none', 'light', 'moderate', 'heavy', 'extreme']
+
+      - name: wind_category
+        description: "BUSINESS LOGIC: Wind strength category"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['calm', 'breezy', 'windy', 'very_windy', 'strong']
+
+      - name: cloud_cover_category
+        description: "BUSINESS LOGIC: Cloud cover category"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['clear', 'partly_cloudy', 'mostly_cloudy', 'overcast']
+
+      - name: weather_description
+        description: "BUSINESS LOGIC: Overall weather condition"
+        tests:
+          - not_null
+
+      - name: is_pleasant_weather
+        description: "BUSINESS LOGIC: Good conditions for outdoor activities"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_adverse_weather
+        description: "BUSINESS LOGIC: Conditions that impact mobility"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+  - name: dim_location
+    description: |
+      **SILVER LAYER - Location Dimension**
+
+      Authoritative location dimension with business logic for zone categorizations.
+      Based on TLC taxi zones seed (265 zones across NYC + EWR).
+
+      **Business Logic Applied:**
+      - Location tier (core/urban/outer/airport)
+      - Service zone flags (yellow zone, boro zone, airport)
+      - High-demand zone identification
+      - Transportation hubs, tourist areas, business districts
+
+    columns:
+      - name: location_key
+        description: "Surrogate key"
+        tests:
+          - unique
+          - not_null
+
+      - name: location_id
+        description: "TLC zone ID"
+        tests:
+          - unique
+          - not_null
+
+      - name: borough
+        description: "NYC borough"
+        tests:
+          - not_null
+
+      - name: zone_name
+        description: "TLC zone name"
+        tests:
+          - not_null
+
+      - name: service_zone
+        description: "TLC service zone designation"
+        tests:
+          - not_null
+
+      - name: location_tier
+        description: "BUSINESS LOGIC: Location tier (core/urban/outer/airport)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['core', 'urban', 'outer', 'airport', 'unknown']
+
+      - name: is_yellow_zone
+        description: "BUSINESS LOGIC: True if yellow taxis can pick up here"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_high_demand_zone
+        description: "BUSINESS LOGIC: Major commercial/tourist areas"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: is_transportation_hub
+        description: "BUSINESS LOGIC: Airports, train stations"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
