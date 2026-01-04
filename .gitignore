@@ -79,7 +79,6 @@ dagster_home/
 *.joblib
 *.h5
 *.hdf5
-models/
 embeddings/
 *.pt
 *.pth

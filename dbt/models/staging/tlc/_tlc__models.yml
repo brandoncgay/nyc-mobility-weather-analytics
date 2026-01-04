@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: stg_tlc__yellow_taxi
+    description: "Staging model for yellow taxi trips - Bronze layer with mechanical cleaning only"
+    columns:
+      - name: trip_id
+        description: "Surrogate key generated from pickup_datetime, vendor_id, and pickup_location_id"
+        tests:
+          - not_null
+
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        tests:
+          - not_null
+
+      - name: vendor_id
+        description: "TPEP provider ID"
+
+      - name: passenger_count
+        description: "Number of passengers"
+
+      - name: trip_distance
+        description: "Trip distance in miles"
+
+      - name: pickup_location_id
+        description: "TLC zone ID for pickup location"
+        tests:
+          - not_null
+
+      - name: dropoff_location_id
+        description: "TLC zone ID for dropoff location"
+
+      - name: payment_type
+        description: "Payment method code"
+
+      - name: total_amount
+        description: "Total amount charged"
+
+  - name: stg_tlc__fhv_taxi
+    description: "Staging model for for-hire vehicle (Uber, Lyft) trips - Bronze layer with mechanical cleaning only"
+    columns:
+      - name: trip_id
+        description: "Surrogate key generated from pickup_datetime, dispatching_base_num, and pickup_location_id"
+        tests:
+          - not_null
+
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        tests:
+          - not_null
+
+      - name: dispatching_base_num
+        description: "TLC base license number of dispatching base"
+        tests:
+          - not_null
+
+      - name: pickup_location_id
+        description: "TLC zone ID for pickup location"
+
+      - name: dropoff_location_id
+        description: "TLC zone ID for dropoff location"

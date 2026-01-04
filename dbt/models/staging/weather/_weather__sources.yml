@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: weather
+    description: "Hourly weather data from Open-Meteo API loaded via DLT"
+    database: nyc_mobility
+    schema: raw_data
+
+    tables:
+      - name: hourly_weather
+        description: "Hourly weather observations for NYC (Lower Manhattan)"
+        columns:
+          - name: timestamp
+            description: "Hour timestamp (UTC)"
+          - name: temp
+            description: "Temperature at 2 meters (°C)"
+          - name: feels_like
+            description: "Apparent temperature (°C)"
+          - name: humidity
+            description: "Relative humidity (0-100%)"
+          - name: dew_point
+            description: "Dew point temperature (°C)"
+          - name: precipitation
+            description: "Total precipitation - rain + snow (mm)"
+          - name: rain
+            description: "Rain only (mm)"
+          - name: snowfall
+            description: "Snowfall (mm)"
+          - name: cloud_cover
+            description: "Cloud coverage (0-100%)"
+          - name: pressure
+            description: "Mean sea level pressure (hPa)"
+          - name: wind_speed
+            description: "Wind speed at 10 meters (m/s)"
+          - name: wind_direction
+            description: "Wind direction (0-360°)"

@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: citibike
+    description: "CitiBike trip data loaded via DLT"
+    database: nyc_mobility
+    schema: raw_data
+
+    tables:
+      - name: trips
+        description: "CitiBike trip records"
+        columns:
+          - name: ride_id
+            description: "Unique identifier for each trip"
+          - name: rideable_type
+            description: "Type of bike (classic_bike, electric_bike, docked_bike)"
+          - name: started_at
+            description: "Trip start date and time"
+          - name: ended_at
+            description: "Trip end date and time"
+          - name: start_station_name
+            description: "Name of the station where trip started"
+          - name: start_station_id
+            description: "Unique identifier for start station"
+          - name: end_station_name
+            description: "Name of the station where trip ended"
+          - name: end_station_id
+            description: "Unique identifier for end station"
+          - name: start_lat
+            description: "Latitude of trip start location"
+          - name: start_lng
+            description: "Longitude of trip start location"
+          - name: end_lat
+            description: "Latitude of trip end location"
+          - name: end_lng
+            description: "Longitude of trip end location"
+          - name: member_casual
+            description: "Rider type (member or casual)"

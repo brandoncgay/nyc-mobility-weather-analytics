@@ -1,0 +1,68 @@
+version: 2
+
+sources:
+  - name: tlc
+    description: "NYC Taxi & Limousine Commission trip records loaded via DLT"
+    database: nyc_mobility
+    schema: raw_data
+
+    tables:
+      - name: yellow_taxi
+        description: "Yellow taxi trip records from NYC TLC"
+        columns:
+          - name: tpep_pickup_datetime
+            description: "The date and time when the meter was engaged"
+          - name: tpep_dropoff_datetime
+            description: "The date and time when the meter was disengaged"
+          - name: vendor_id
+            description: "A code indicating the TPEP provider (1=Creative Mobile, 2=VeriFone)"
+          - name: passenger_count
+            description: "The number of passengers in the vehicle (driver entered)"
+          - name: trip_distance
+            description: "The elapsed trip distance in miles"
+          - name: ratecode_id
+            description: "The final rate code in effect at the end of the trip"
+          - name: store_and_fwd_flag
+            description: "Flag indicating whether trip record was held in vehicle memory"
+          - name: pu_location_id
+            description: "TLC Taxi Zone where the meter was engaged"
+          - name: do_location_id
+            description: "TLC Taxi Zone where the meter was disengaged"
+          - name: payment_type
+            description: "Payment method (1=Credit card, 2=Cash, etc.)"
+          - name: fare_amount
+            description: "Time-and-distance fare calculated by the meter"
+          - name: extra
+            description: "Miscellaneous extras and surcharges"
+          - name: mta_tax
+            description: "MTA tax automatically triggered based on meter rate"
+          - name: tip_amount
+            description: "Tip amount (credit card only, cash tips not included)"
+          - name: tolls_amount
+            description: "Total amount of all tolls paid in trip"
+          - name: improvement_surcharge
+            description: "Improvement surcharge assessed trips at flag drop"
+          - name: total_amount
+            description: "Total amount charged to passengers (excludes cash tips)"
+          - name: congestion_surcharge
+            description: "Congestion surcharge for trips in Manhattan"
+          - name: airport_fee
+            description: "Fee for airport pickups"
+          - name: cbd_congestion_fee
+            description: "Central Business District congestion fee"
+
+      - name: fhv_taxi
+        description: "For-hire vehicle (Uber, Lyft, etc.) trip records from NYC TLC"
+        columns:
+          - name: dispatching_base_num
+            description: "TLC base license number of the dispatching base"
+          - name: pickup_datetime
+            description: "Date and time of the trip pickup"
+          - name: drop_off_datetime
+            description: "Date and time of the trip dropoff"
+          - name: affiliated_base_number
+            description: "TLC base license number affiliated with the trip"
+          - name: p_ulocation_id
+            description: "TLC Taxi Zone for pickup"
+          - name: d_olocation_id
+            description: "TLC Taxi Zone for dropoff"

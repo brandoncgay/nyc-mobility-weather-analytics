@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: stg_weather__hourly
+    description: "Staging model for hourly weather data - Bronze layer with mechanical cleaning only"
+    columns:
+      - name: timestamp
+        description: "Hour timestamp (UTC)"
+        tests:
+          - unique
+          - not_null
+
+      - name: temp
+        description: "Temperature in Celsius"
+        tests:
+          - not_null
+
+      - name: feels_like
+        description: "Apparent temperature in Celsius"
+        tests:
+          - not_null
+
+      - name: humidity
+        description: "Relative humidity (0-100%)"
+        tests:
+          - not_null
+
+      - name: dew_point
+        description: "Dew point temperature in Celsius"
+
+      - name: precipitation
+        description: "Total precipitation in mm (rain + snow)"
+        tests:
+          - not_null
+
+      - name: rain
+        description: "Rain only in mm"
+        tests:
+          - not_null
+
+      - name: snowfall
+        description: "Snowfall in mm"
+        tests:
+          - not_null
+
+      - name: cloud_cover
+        description: "Cloud coverage percentage (0-100)"
+        tests:
+          - not_null
+
+      - name: pressure
+        description: "Mean sea level pressure in hPa"
+
+      - name: wind_speed
+        description: "Wind speed in m/s"
+        tests:
+          - not_null
+
+      - name: wind_direction
+        description: "Wind direction in degrees (0-360)"
+        tests:
+          - not_null

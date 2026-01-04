@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: stg_citibike__trips
+    description: "Staging model for CitiBike trips - Bronze layer with mechanical cleaning only"
+    columns:
+      - name: trip_id
+        description: "Unique ride identifier from source system"
+        tests:
+          - unique
+          - not_null
+
+      - name: rideable_type
+        description: "Type of bike (classic_bike, electric_bike, docked_bike)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['classic_bike', 'electric_bike', 'docked_bike']
+
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        tests:
+          - not_null
+
+      - name: start_station_name
+        description: "Name of start station"
+
+      - name: pickup_location_id
+        description: "Station ID where trip started"
+
+      - name: end_station_name
+        description: "Name of end station"
+
+      - name: dropoff_location_id
+        description: "Station ID where trip ended"
+
+      - name: start_lat
+        description: "Start location latitude"
+
+      - name: start_lng
+        description: "Start location longitude"
+
+      - name: end_lat
+        description: "End location latitude"
+
+      - name: end_lng
+        description: "End location longitude"
+
+      - name: member_casual
+        description: "Rider type (member or casual)"
+        tests:
+          - accepted_values:
+              values: ['member', 'casual']
