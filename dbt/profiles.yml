@@ -1,0 +1,22 @@
+nyc_mobility:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '../data/nyc_mobility.duckdb'
+      schema: core
+      threads: 4
+      extensions:
+        - parquet
+      settings:
+        memory_limit: '8GB'
+
+    prod:
+      type: duckdb
+      path: '../data/nyc_mobility_prod.duckdb'
+      schema: core
+      threads: 8
+      extensions:
+        - parquet
+      settings:
+        memory_limit: '16GB'

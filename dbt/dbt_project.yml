@@ -1,0 +1,71 @@
+name: 'nyc_mobility_analytics'
+version: '1.0.0'
+config-version: 2
+
+# Project profile (references profiles.yml)
+profile: 'nyc_mobility'
+
+# Directories
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Clean targets
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Model configurations
+models:
+  nyc_mobility_analytics:
+    # Default materialization
+    +materialized: view
+
+    # Bronze layer: Staging models
+    staging:
+      +materialized: view
+      +tags: ["bronze", "staging"]
+      tlc:
+        +tags: ["bronze", "staging", "tlc"]
+      citibike:
+        +tags: ["bronze", "staging", "citibike"]
+      weather:
+        +tags: ["bronze", "staging", "weather"]
+
+    # Intermediate layer: Shared transformations
+    intermediate:
+      +materialized: ephemeral  # Not persisted, used as CTEs
+      +tags: ["intermediate"]
+
+    # Silver layer: Marts (dimensional model + business logic)
+    marts:
+      +materialized: table
+      +tags: ["silver", "marts"]
+      +schema: core
+      core:
+        +tags: ["silver", "marts", "core"]
+
+# Seed configurations
+seeds:
+  nyc_mobility_analytics:
+    +schema: seeds
+    +tags: ["seeds"]
+
+# Tests
+tests:
+  nyc_mobility_analytics:
+    +store_failures: true
+    +schema: test_results
+
+# Documentation
+docs-paths: ["docs"]
+
+# Vars (can be overridden in profiles.yml or via CLI)
+vars:
+  # Date range for analysis
+  start_date: '2023-10-01'
+  end_date: '2023-12-31'
