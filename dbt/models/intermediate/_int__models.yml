@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: int_trips__unioned
+    description: |
+      **Intermediate model - Internal plumbing only**
+
+      Unions all trip types (yellow taxi, FHV, CitiBike) with a standardized schema.
+      This is a shared transformation used by multiple marts.
+
+      **NO BUSINESS LOGIC** - just schema standardization.
+      Business logic (calculations, categorizations, metrics) lives in Silver/marts layer.
+
+      **Materialization**: Ephemeral (not persisted, used as CTEs in downstream models)
+
+    columns:
+      - name: trip_id
+        description: "Surrogate key from source staging models"
+
+      - name: trip_type
+        description: "Type of trip (yellow_taxi, fhv, citibike)"
+
+      - name: pickup_datetime
+        description: "Trip start timestamp (standardized across all sources)"
+
+      - name: dropoff_datetime
+        description: "Trip end timestamp (standardized across all sources)"
+
+      - name: pickup_location_id
+        description: |
+          Location identifier for pickup
+          - Taxi/FHV: TLC zone ID
+          - CitiBike: Station ID
+
+      - name: dropoff_location_id
+        description: |
+          Location identifier for dropoff
+          - Taxi/FHV: TLC zone ID
+          - CitiBike: Station ID
+
+      - name: passenger_count
+        description: "Number of passengers (yellow taxi only, null for others)"
+
+      - name: trip_distance
+        description: "Trip distance in miles (yellow taxi only, null for others)"
+
+      - name: revenue
+        description: "Total fare amount (yellow taxi only, null for others)"
+
+      - name: payment_type
+        description: "Payment method (yellow taxi only, null for others)"
+
+      - name: member_type
+        description: "Rider type (CitiBike only: member/casual, null for taxis)"
+
+      - name: rideable_type
+        description: "Bike type (CitiBike only: classic/electric/docked, null for taxis)"
