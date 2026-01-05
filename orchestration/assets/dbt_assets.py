@@ -31,6 +31,9 @@ def dbt_analytics_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     """
     Dagster asset representing all dbt models in the analytics project.
 
+    NOTE: This asset should run AFTER DLT ingestion completes. The dependency
+    is enforced through Dagster job definitions (see orchestration/jobs.py)
+
     This asset will:
     1. Run all dbt models in dependency order
     2. Materialize dimension tables (dim_*)
@@ -38,10 +41,12 @@ def dbt_analytics_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     4. Make metrics available via the semantic layer
 
     The dbt project structure:
-    - Staging (Bronze): Cleaned source data
+    - Staging (Bronze): Cleaned source data from dbt sources (loaded by DLT)
     - Intermediate: Lightweight transformations (ephemeral)
     - Marts/Core (Silver): Dimension and fact tables
     - Semantic Layer (Gold): Metrics and semantic models
     """
+    context.log.info("Starting dbt transformations...")
+
     # Run all dbt models
     yield from dbt.cli(["build"], context=context).stream()

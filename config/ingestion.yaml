@@ -1,0 +1,84 @@
+# DLT Ingestion Configuration
+# Configure which data sources to ingest and their parameters
+
+# Data source selection
+sources:
+  yellow_taxi:
+    enabled: true
+    description: "NYC TLC Yellow Taxi trip records"
+    months:
+      - "2024-09"
+      - "2024-10"
+      - "2024-11"
+
+  fhv_taxi:
+    enabled: true
+    description: "For-Hire Vehicle (Uber/Lyft) trip records"
+    months:
+      - "2024-09"
+      - "2024-10"
+      - "2024-11"
+
+  citibike:
+    enabled: true
+    description: "CitiBike trip data"
+    months:
+      - "2024-09"
+      - "2024-10"
+      - "2024-11"
+
+  weather:
+    enabled: true
+    description: "Open-Meteo weather data for NYC"
+    # Weather uses date range instead of months
+    start_date: "2024-09-01"
+    end_date: "2024-11-30"
+    location:
+      latitude: 40.7580
+      longitude: -73.9855
+      timezone: "America/New_York"
+
+# Database configuration
+database:
+  path: "data/nyc_mobility.duckdb"
+  schema: "raw_data"
+
+# Ingestion behavior
+settings:
+  # Set to true to drop existing tables before loading
+  full_refresh: false
+
+  # Maximum retries for failed downloads
+  max_retries: 3
+
+  # Timeout for HTTP requests (seconds)
+  request_timeout: 300
+
+  # Whether to validate row counts after ingestion
+  validate_counts: true
+
+  # Minimum expected row counts (for validation)
+  min_row_counts:
+    yellow_taxi: 8000000  # ~8.6M expected
+    fhv_taxi: 2000000     # ~2.4M expected
+    citibike: 1000000     # ~1.4M expected
+    weather: 1400         # ~1,464 hours expected
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/ingestion.log"
+
+# Performance tuning
+performance:
+  # Number of parallel downloads
+  parallel_downloads: 3
+
+  # Chunk size for reading large files
+  chunk_size: 100000
+
+  # DuckDB configuration
+  duckdb:
+    threads: 4
+    memory_limit: "8GB"

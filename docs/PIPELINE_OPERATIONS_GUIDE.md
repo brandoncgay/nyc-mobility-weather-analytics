@@ -3,12 +3,88 @@
 Complete guide for running, testing, and backfilling the NYC Mobility & Weather Analytics pipeline.
 
 ## Table of Contents
-1. [Initial Setup & Verification](#initial-setup--verification)
-2. [Running the Pipeline](#running-the-pipeline)
-3. [Testing the Pipeline](#testing-the-pipeline)
-4. [Backfills & Historical Data](#backfills--historical-data)
-5. [Validating Results](#validating-results)
-6. [Troubleshooting](#troubleshooting)
+1. [Pipeline Architecture](#pipeline-architecture)
+2. [Initial Setup & Verification](#initial-setup--verification)
+3. [Running the Pipeline](#running-the-pipeline)
+4. [Testing the Pipeline](#testing-the-pipeline)
+5. [Backfills & Historical Data](#backfills--historical-data)
+6. [Validating Results](#validating-results)
+7. [Troubleshooting](#troubleshooting)
+
+---
+
+## Pipeline Architecture
+
+The complete pipeline consists of three main stages orchestrated by Dagster:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DLT Ingestion (Bronze)                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ Yellow Taxi  │  │   CitiBike   │  │   Weather    │         │
+│  │   (~8.6M)    │  │   (~1.4M)    │  │   (~1.5K)    │         │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
+│         │                  │                  │                  │
+│         └──────────────────┴──────────────────┘                  │
+│                            ▼                                     │
+│                 ┌─────────────────────┐                          │
+│                 │ DLT Ingestion       │                          │
+│                 │ Complete Marker     │                          │
+│                 └──────────┬──────────┘                          │
+└────────────────────────────┼───────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  dbt Transformation (Silver)                    │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │   Staging    │  │ Dimensions   │  │    Facts     │         │
+│  │  (4 models)  │  │  (4 models)  │  │  (2 models)  │         │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
+│         │                  │                  │                  │
+│         └──────────────────┴──────────────────┘                  │
+│                            ▼                                     │
+│                 ┌─────────────────────┐                          │
+│                 │  Semantic Layer     │                          │
+│                 │   (50 metrics)      │                          │
+│                 └─────────────────────┘                          │
+└─────────────────────────────────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Great Expectations Validation (Gold)               │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ Data Quality │  │  Completeness│  │ Consistency  │         │
+│  │   Checks     │  │    Checks    │  │   Checks     │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Components:**
+
+1. **DLT Ingestion (Bronze Layer)**
+   - Ingests raw data from external sources
+   - 3 parallel assets: yellow_taxi, citibike, weather
+   - Loads into DuckDB `raw_data` schema
+   - Managed by `src/ingestion/run_pipeline.py`
+
+2. **dbt Transformation (Silver Layer)**
+   - Depends on DLT ingestion completion
+   - 12 models: staging → intermediate → marts
+   - 108 tests for data quality
+   - Managed by `dbt/` directory
+
+3. **Great Expectations Validation (Gold Layer)**
+   - 10 validation suites
+   - 56 data quality checks
+   - Managed by `great_expectations/` directory
+
+**Orchestration:**
+
+All stages are orchestrated by Dagster, which:
+- Tracks asset dependencies
+- Provides visual lineage graph
+- Enables selective materialization
+- Logs execution history
 
 ---
 
@@ -124,25 +200,73 @@ poetry run dbt build
 # 7. All tests
 ```
 
-### Option 3: Run Through Dagster (Recommended)
+### Option 3: Run Through Dagster (Recommended for Production)
+
+This is the **recommended approach** for running the complete end-to-end pipeline.
 
 ```bash
 # Start Dagster UI
+cd /path/to/nyc-mobility-weather-analytics
 poetry run dagster dev -w orchestration/workspace.yaml
 
-# Then in browser (http://localhost:3000):
-# 1. Go to "Assets" tab
-# 2. Select all assets or specific ones
-# 3. Click "Materialize selected"
-# 4. Watch real-time execution logs
+# Open browser to: http://localhost:3000
 ```
 
+**In the Dagster UI:**
+
+1. **Run Full Pipeline (DLT + dbt + GE):**
+   - Go to "Jobs" tab → Select "full_pipeline"
+   - Click "Launch Run"
+   - Watch real-time logs as each asset materializes
+
+2. **Run Specific Stages:**
+   - **Ingestion only**: Jobs → "dlt_ingestion" → Launch Run
+   - **Transformation only**: Jobs → "dbt_transformation" → Launch Run
+
+3. **Selective Asset Materialization:**
+   - Go to "Assets" tab
+   - Click asset graph to visualize dependencies
+   - Select specific assets (e.g., just yellow_taxi + dbt models)
+   - Click "Materialize selected"
+
 **Benefits of Dagster:**
-- Visual lineage graph
-- Real-time execution logs
-- Asset versioning
-- Run history
-- Easy re-runs of failed assets
+- **Visual lineage**: See complete data flow from ingestion → transformation → validation
+- **Dependency tracking**: Dagster ensures DLT completes before dbt runs
+- **Real-time logs**: Monitor progress of long-running ingestion
+- **Asset versioning**: Track when each asset was last materialized
+- **Selective runs**: Re-run only failed assets
+- **Scheduling**: Enable daily_dbt_schedule for automated runs
+
+**Dagster Jobs Available:**
+
+| Job Name | Description | Assets Included |
+|----------|-------------|-----------------|
+| `full_pipeline` | Complete end-to-end pipeline | All DLT + all dbt + validation |
+| `dlt_ingestion` | Data ingestion only | yellow_taxi, citibike, weather |
+| `dbt_transformation` | dbt models only | All dbt staging, marts, metrics |
+
+### Option 4: Using the Pipeline Script (Quickest)
+
+For quick local development and testing:
+
+```bash
+# Run complete pipeline (DLT + dbt + validation)
+./scripts/run_pipeline.sh full
+
+# Run only ingestion
+./scripts/run_pipeline.sh ingestion
+
+# Run only transformations (requires data to exist)
+./scripts/run_pipeline.sh quick
+```
+
+**Available Commands:**
+- `full` - Complete pipeline (DLT → dbt → GE)
+- `ingestion` - Run DLT data ingestion only
+- `quick` - Quick smoke test (staging + 1 dim + 1 fact)
+- `test` - Run all tests
+- `validate` - Validate data quality
+- `backfill` - Full refresh all models
 
 ---
 

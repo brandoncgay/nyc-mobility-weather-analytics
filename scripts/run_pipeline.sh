@@ -27,32 +27,49 @@ check_database() {
         log_error "Database not found at data/nyc_mobility.duckdb"
         log_info "Please run the ingestion pipeline first:"
         log_info "  poetry run python src/ingestion/run_pipeline.py"
+        log_info "  OR run: ./scripts/run_pipeline.sh full"
         exit 1
     fi
     log_success "Database found"
 }
 
+# Function to run ingestion only
+run_ingestion() {
+    log_info "Running DLT data ingestion..."
+
+    log_info "Ingesting data from sources:"
+    log_info "  - NYC TLC Yellow Taxi (~8.6M trips)"
+    log_info "  - CitiBike System Data (~1.4M trips)"
+    log_info "  - Open-Meteo Weather API (~1.5K hours)"
+
+    poetry run python src/ingestion/run_pipeline.py
+
+    log_success "Data ingestion completed!"
+    log_info "Database: data/nyc_mobility.duckdb"
+}
+
 # Function to run full pipeline
 run_full() {
-    log_info "Running FULL pipeline build..."
+    log_info "Running FULL end-to-end pipeline..."
 
-    check_database
+    log_info "Step 1/6: Running DLT data ingestion (taxi, citibike, weather)..."
+    poetry run python src/ingestion/run_pipeline.py
 
-    log_info "Step 1/5: Installing dbt dependencies..."
+    log_info "Step 2/6: Installing dbt dependencies..."
     cd dbt
     poetry run dbt deps
 
-    log_info "Step 2/5: Running dbt build (all models + tests)..."
+    log_info "Step 3/6: Running dbt build (all models + tests)..."
     poetry run dbt build
 
-    log_info "Step 3/5: Generating dbt documentation..."
+    log_info "Step 4/6: Generating dbt documentation..."
     poetry run dbt docs generate
 
     cd ..
-    log_info "Step 4/5: Running Great Expectations validations..."
+    log_info "Step 5/6: Running Great Expectations validations..."
     poetry run python great_expectations/run_validations.py
 
-    log_info "Step 5/5: Generating validation summary..."
+    log_info "Step 6/6: Generating validation summary..."
     echo ""
     echo "========================================="
     echo "Pipeline Execution Complete!"
@@ -246,6 +263,9 @@ case "${1:-full}" in
     full)
         run_full
         ;;
+    ingestion)
+        run_ingestion
+        ;;
     quick)
         run_quick
         ;;
@@ -259,10 +279,11 @@ case "${1:-full}" in
         run_backfill
         ;;
     *)
-        echo "Usage: $0 {full|quick|test|validate|backfill}"
+        echo "Usage: $0 {full|ingestion|quick|test|validate|backfill}"
         echo ""
         echo "Commands:"
-        echo "  full      - Run complete pipeline (models + tests + quality checks)"
+        echo "  full      - Run complete end-to-end pipeline (DLT + dbt + tests + validation)"
+        echo "  ingestion - Run DLT data ingestion only (yellow taxi + citibike + weather)"
         echo "  quick     - Run quick test (staging + 1 dim + 1 fact)"
         echo "  test      - Run all tests only"
         echo "  validate  - Validate data quality and row counts"
