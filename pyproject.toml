@@ -30,6 +30,7 @@ dagster-dbt = "^0.23.0"
 dagster-webserver = "^1.7.0"
 great-expectations = "^0.18.0"
 dbt-metricflow = "^0.7.0"
+duckdb-engine = "^0.17.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
