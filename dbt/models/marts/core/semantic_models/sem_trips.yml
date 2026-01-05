@@ -1,0 +1,268 @@
+semantic_models:
+  - name: trips
+    description: |
+      Trip-level semantic model for NYC mobility analysis.
+
+      Grain: One row per trip across all modalities (yellow taxi, FHV, CitiBike).
+      Total trips: ~12.35M
+
+      Use this model to analyze:
+      - Trip patterns by time, weather, and location
+      - Trip duration and speed metrics
+      - Weather impact on mobility
+      - Mode share analysis
+
+    model: ref('fct_trips')
+
+    # ============================================
+    # ENTITIES (Primary and Foreign Keys)
+    # ============================================
+    entities:
+      - name: trip
+        type: primary
+        expr: trip_key
+
+      - name: date
+        type: foreign
+        expr: date_key
+
+      - name: time
+        type: foreign
+        expr: time_key
+
+      - name: pickup_location
+        type: foreign
+        expr: pickup_location_key
+
+      - name: dropoff_location
+        type: foreign
+        expr: dropoff_location_key
+
+    # ============================================
+    # DIMENSIONS (Attributes for Grouping/Filtering)
+    # ============================================
+    dimensions:
+      # Trip Type
+      - name: trip_type
+        type: categorical
+        expr: trip_type
+        description: "Type of trip (yellow_taxi, fhv, citibike)"
+
+      # Time Dimensions
+      - name: pickup_datetime
+        type: time
+        type_params:
+          time_granularity: day
+        expr: pickup_datetime
+        description: "Trip pickup timestamp"
+
+      - name: day_part
+        type: categorical
+        expr: day_part
+        description: "Time of day category (morning/afternoon/evening/night)"
+
+      - name: is_weekend
+        type: categorical
+        expr: is_weekend
+        description: "Weekend flag"
+
+      - name: is_rush_hour
+        type: categorical
+        expr: is_rush_hour
+        description: "Rush hour flag (7-9am, 5-7pm)"
+
+      - name: is_business_hours
+        type: categorical
+        expr: is_business_hours
+        description: "Business hours flag (9am-5pm)"
+
+      - name: is_late_night
+        type: categorical
+        expr: is_late_night
+        description: "Late night flag (11pm-5am)"
+
+      # Weather Dimensions
+      - name: temp_category
+        type: categorical
+        expr: temp_category
+        description: "Temperature category (cold/cool/mild/warm/hot)"
+
+      - name: feels_like_category
+        type: categorical
+        expr: feels_like_category
+        description: "Feels-like temperature category"
+
+      - name: precipitation_type
+        type: categorical
+        expr: precipitation_type
+        description: "Precipitation type (none/rain/snow/mixed)"
+
+      - name: precipitation_intensity
+        type: categorical
+        expr: precipitation_intensity
+        description: "Precipitation intensity (none/light/moderate/heavy/extreme)"
+
+      - name: wind_category
+        type: categorical
+        expr: wind_category
+        description: "Wind strength category"
+
+      - name: cloud_cover_category
+        type: categorical
+        expr: cloud_cover_category
+        description: "Cloud cover category"
+
+      - name: humidity_category
+        type: categorical
+        expr: humidity_category
+        description: "Humidity category"
+
+      - name: is_pleasant_weather
+        type: categorical
+        expr: is_pleasant_weather
+        description: "Pleasant weather flag"
+
+      - name: is_adverse_weather
+        type: categorical
+        expr: is_adverse_weather
+        description: "Adverse weather flag"
+
+      - name: is_good_cycling_weather
+        type: categorical
+        expr: is_good_cycling_weather
+        description: "Good cycling weather flag"
+
+      # Payment & Service Dimensions
+      - name: payment_type
+        type: categorical
+        expr: payment_type
+        description: "Payment method"
+
+      - name: member_type
+        type: categorical
+        expr: member_type
+        description: "Member type (for CitiBike)"
+
+      - name: rideable_type
+        type: categorical
+        expr: rideable_type
+        description: "Rideable type (for CitiBike)"
+
+    # ============================================
+    # MEASURES (Aggregatable Metrics)
+    # ============================================
+    measures:
+      # Count Measures
+      - name: trip_count
+        description: "Total number of trips"
+        agg: count
+        expr: trip_key
+        agg_time_dimension: pickup_datetime
+
+      # Duration Measures
+      - name: avg_trip_duration
+        description: "Average trip duration in minutes"
+        agg: average
+        expr: trip_duration_minutes
+        agg_time_dimension: pickup_datetime
+
+      - name: total_trip_duration
+        description: "Total trip duration in minutes"
+        agg: sum
+        expr: trip_duration_minutes
+        agg_time_dimension: pickup_datetime
+
+      - name: median_trip_duration
+        description: "Median trip duration in minutes"
+        agg: median
+        expr: trip_duration_minutes
+        agg_time_dimension: pickup_datetime
+
+      - name: max_trip_duration
+        description: "Maximum trip duration in minutes"
+        agg: max
+        expr: trip_duration_minutes
+        agg_time_dimension: pickup_datetime
+
+      # Distance Measures
+      - name: avg_trip_distance
+        description: "Average trip distance in miles"
+        agg: average
+        expr: trip_distance
+        agg_time_dimension: pickup_datetime
+
+      - name: total_trip_distance
+        description: "Total trip distance in miles"
+        agg: sum
+        expr: trip_distance
+        agg_time_dimension: pickup_datetime
+
+      - name: median_trip_distance
+        description: "Median trip distance in miles"
+        agg: median
+        expr: trip_distance
+        agg_time_dimension: pickup_datetime
+
+      # Speed Measures
+      - name: avg_speed
+        description: "Average speed in mph"
+        agg: average
+        expr: avg_speed_mph
+        agg_time_dimension: pickup_datetime
+
+      # Passenger Measures
+      - name: total_passengers
+        description: "Total passenger count"
+        agg: sum
+        expr: passenger_count
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_passengers_per_trip
+        description: "Average passengers per trip"
+        agg: average
+        expr: passenger_count
+        agg_time_dimension: pickup_datetime
+
+      # Revenue Measures
+      - name: total_revenue
+        description: "Total revenue (taxi trips only)"
+        agg: sum
+        expr: revenue
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_revenue_per_trip
+        description: "Average revenue per trip"
+        agg: average
+        expr: revenue
+        agg_time_dimension: pickup_datetime
+
+      # Weather Measures (for correlation analysis)
+      - name: avg_temperature_celsius
+        description: "Average temperature in Celsius"
+        agg: average
+        expr: temperature_celsius
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_temperature_fahrenheit
+        description: "Average temperature in Fahrenheit"
+        agg: average
+        expr: temperature_fahrenheit
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_precipitation
+        description: "Average precipitation in mm"
+        agg: average
+        expr: precipitation
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_wind_speed
+        description: "Average wind speed in mph"
+        agg: average
+        expr: wind_speed_mph
+        agg_time_dimension: pickup_datetime
+
+      - name: avg_humidity
+        description: "Average humidity percentage"
+        agg: average
+        expr: humidity
+        agg_time_dimension: pickup_datetime

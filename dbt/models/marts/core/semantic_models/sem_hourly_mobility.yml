@@ -1,0 +1,230 @@
+semantic_models:
+  - name: hourly_mobility
+    description: |
+      Hourly aggregated mobility metrics semantic model.
+
+      Grain: One row per hour per trip_type.
+
+      Use this model to analyze:
+      - Hourly mobility patterns
+      - Mode share trends over time
+      - Weather impact on hourly demand
+      - Rush hour vs non-rush hour patterns
+
+    model: ref('fct_hourly_mobility')
+
+    # ============================================
+    # ENTITIES (Primary and Foreign Keys)
+    # ============================================
+    entities:
+      - name: hourly_mobility
+        type: primary
+        expr: "hour_timestamp || '_' || trip_type"
+
+      - name: date
+        type: foreign
+        expr: date_key
+
+      - name: time
+        type: foreign
+        expr: time_key
+
+    # ============================================
+    # DIMENSIONS (Attributes for Grouping/Filtering)
+    # ============================================
+    dimensions:
+      # Time Dimensions
+      - name: hour_timestamp
+        type: time
+        type_params:
+          time_granularity: day
+        expr: hour_timestamp
+        description: "Hour timestamp"
+
+      - name: day_part
+        type: categorical
+        expr: day_part
+        description: "Time of day category"
+
+      - name: is_weekend
+        type: categorical
+        expr: is_weekend
+        description: "Weekend flag"
+
+      # Trip Type
+      - name: trip_type
+        type: categorical
+        expr: trip_type
+        description: "Type of trip (yellow_taxi, fhv, citibike)"
+
+      # Weather Dimensions
+      - name: temp_category
+        type: categorical
+        expr: temp_category
+        description: "Temperature category"
+
+      - name: precipitation_type
+        type: categorical
+        expr: precipitation_type
+        description: "Precipitation type"
+
+      - name: has_adverse_weather
+        type: categorical
+        expr: has_adverse_weather
+        description: "Adverse weather flag"
+
+      - name: has_pleasant_weather
+        type: categorical
+        expr: has_pleasant_weather
+        description: "Pleasant weather flag"
+
+      - name: has_good_cycling_weather
+        type: categorical
+        expr: has_good_cycling_weather
+        description: "Good cycling weather flag"
+
+    # ============================================
+    # MEASURES (Aggregatable Metrics)
+    # ============================================
+    measures:
+      # Count Measures
+      - name: total_trips
+        description: "Total trips in the hour"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: trip_count
+
+      - name: hourly_trip_count
+        description: "Average trips per hour"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: trip_count
+
+      # Trip Type Breakdown
+      - name: yellow_taxi_trips
+        description: "Total yellow taxi trips"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: yellow_taxi_count
+
+      - name: fhv_trips
+        description: "Total FHV trips"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: fhv_count
+
+      - name: citibike_trips
+        description: "Total CitiBike trips"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: citibike_count
+
+      # Duration Measures
+      - name: hourly_avg_trip_duration
+        description: "Average trip duration in minutes"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_trip_duration_minutes
+
+      # Distance Measures
+      - name: hourly_avg_trip_distance
+        description: "Average trip distance in miles"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_trip_distance_miles
+
+      # Speed Measures
+      - name: hourly_avg_speed
+        description: "Average speed in mph"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_speed_mph
+
+      # Passenger Measures
+      - name: hourly_total_passengers
+        description: "Total passengers"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: total_passengers
+
+      # Revenue Measures
+      - name: hourly_total_revenue
+        description: "Total revenue"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: total_revenue
+
+      - name: yellow_taxi_revenue
+        description: "Total yellow taxi revenue"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: yellow_taxi_revenue
+
+      - name: avg_taxi_fare
+        description: "Average yellow taxi fare"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_yellow_taxi_fare
+
+      # Mode Share Measures
+      - name: citibike_mode_share
+        description: "CitiBike mode share percentage"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: citibike_mode_share_pct
+
+      - name: yellow_taxi_mode_share
+        description: "Yellow taxi mode share percentage"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: yellow_taxi_mode_share_pct
+
+      - name: fhv_mode_share
+        description: "FHV mode share percentage"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: fhv_mode_share_pct
+
+      # Rush Hour Measures
+      - name: rush_hour_trips
+        description: "Total rush hour trips"
+        agg: sum
+        agg_time_dimension: hour_timestamp
+        expr: rush_hour_trip_count
+
+      - name: rush_hour_percentage
+        description: "Rush hour trip percentage"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: rush_hour_pct
+
+      # Weather Measures
+      - name: hourly_avg_temperature_celsius
+        description: "Average temperature in Celsius"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_temperature_celsius
+
+      - name: hourly_avg_temperature_fahrenheit
+        description: "Average temperature in Fahrenheit"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_temperature_fahrenheit
+
+      - name: hourly_avg_precipitation
+        description: "Average precipitation in mm"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_precipitation_mm
+
+      - name: hourly_avg_wind_speed
+        description: "Average wind speed in mph"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_wind_speed_mph
+
+      - name: hourly_avg_humidity
+        description: "Average humidity percentage"
+        agg: average
+        agg_time_dimension: hour_timestamp
+        expr: avg_humidity_pct

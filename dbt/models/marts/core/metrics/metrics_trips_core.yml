@@ -1,0 +1,96 @@
+metrics:
+  # ============================================
+  # CORE TRIP METRICS
+  # ============================================
+
+  - name: total_trips
+    description: "Total number of trips across all modalities"
+    type: simple
+    label: "Total Trips"
+    type_params:
+      measure: trip_count
+
+  - name: avg_trip_duration_minutes
+    description: "Average trip duration in minutes"
+    type: simple
+    label: "Avg Trip Duration"
+    type_params:
+      measure: avg_trip_duration
+
+  - name: median_trip_duration_minutes
+    description: "Median trip duration in minutes"
+    type: simple
+    label: "Median Trip Duration"
+    type_params:
+      measure: median_trip_duration
+
+  - name: avg_trip_distance_miles
+    description: "Average trip distance in miles"
+    type: simple
+    label: "Avg Trip Distance"
+    type_params:
+      measure: avg_trip_distance
+
+  - name: total_trip_distance_miles
+    description: "Total trip distance in miles"
+    type: simple
+    label: "Total Trip Distance"
+    type_params:
+      measure: total_trip_distance
+
+  - name: avg_trip_speed_mph
+    description: "Average trip speed in mph"
+    type: simple
+    label: "Avg Speed"
+    type_params:
+      measure: avg_speed
+
+  # ============================================
+  # PASSENGER METRICS
+  # ============================================
+
+  - name: total_passengers
+    description: "Total passenger count across all trips"
+    type: simple
+    label: "Total Passengers"
+    type_params:
+      measure: total_passengers
+
+  - name: avg_passengers_per_trip
+    description: "Average passengers per trip"
+    type: simple
+    label: "Avg Passengers/Trip"
+    type_params:
+      measure: avg_passengers_per_trip
+
+  # ============================================
+  # REVENUE METRICS
+  # ============================================
+
+  - name: total_revenue
+    description: "Total revenue from taxi trips"
+    type: simple
+    label: "Total Revenue"
+    type_params:
+      measure: total_revenue
+
+  - name: avg_fare
+    description: "Average fare per trip"
+    type: simple
+    label: "Avg Fare"
+    type_params:
+      measure: avg_revenue_per_trip
+
+  # ============================================
+  # DERIVED METRICS
+  # ============================================
+
+  - name: revenue_per_mile
+    description: "Revenue per mile traveled"
+    type: derived
+    label: "Revenue/Mile"
+    type_params:
+      expr: total_revenue / total_trip_distance_miles
+      metrics:
+        - total_revenue
+        - total_trip_distance_miles

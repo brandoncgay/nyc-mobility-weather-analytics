@@ -1,0 +1,147 @@
+metrics:
+  # ============================================
+  # TIME-BASED TRIP PATTERNS
+  # ============================================
+
+  - name: rush_hour_trips
+    description: "Total trips during rush hour (7-9am, 5-7pm)"
+    type: simple
+    label: "Rush Hour Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__is_rush_hour') }} = true
+
+  - name: weekend_trips
+    description: "Total trips on weekends"
+    type: simple
+    label: "Weekend Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__is_weekend') }} = true
+
+  - name: weekday_trips
+    description: "Total trips on weekdays"
+    type: simple
+    label: "Weekday Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__is_weekend') }} = false
+
+  - name: late_night_trips
+    description: "Total trips late night (11pm-5am)"
+    type: simple
+    label: "Late Night Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__is_late_night') }} = true
+
+  - name: business_hours_trips
+    description: "Total trips during business hours (9am-5pm)"
+    type: simple
+    label: "Business Hours Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__is_business_hours') }} = true
+
+  # ============================================
+  # TIME PATTERN RATIOS
+  # ============================================
+
+  - name: rush_hour_trip_rate
+    description: "Percentage of trips during rush hour"
+    type: derived
+    label: "Rush Hour %"
+    type_params:
+      expr: rush_hour_trips / total_trips * 100
+      metrics:
+        - rush_hour_trips
+        - total_trips
+
+  - name: weekend_trip_rate
+    description: "Percentage of trips on weekends"
+    type: derived
+    label: "Weekend %"
+    type_params:
+      expr: weekend_trips / total_trips * 100
+      metrics:
+        - weekend_trips
+        - total_trips
+
+  - name: late_night_trip_rate
+    description: "Percentage of trips late night"
+    type: derived
+    label: "Late Night %"
+    type_params:
+      expr: late_night_trips / total_trips * 100
+      metrics:
+        - late_night_trips
+        - total_trips
+
+  # ============================================
+  # DAY PART METRICS
+  # ============================================
+
+  - name: morning_trips
+    description: "Trips during morning (6am-11am)"
+    type: simple
+    label: "Morning Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__day_part') }} = 'morning'
+
+  - name: afternoon_trips
+    description: "Trips during afternoon (12pm-5pm)"
+    type: simple
+    label: "Afternoon Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__day_part') }} = 'afternoon'
+
+  - name: evening_trips
+    description: "Trips during evening (6pm-9pm)"
+    type: simple
+    label: "Evening Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__day_part') }} = 'evening'
+
+  - name: night_trips
+    description: "Trips during night (10pm-5am)"
+    type: simple
+    label: "Night Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__day_part') }} = 'night'
+
+  # ============================================
+  # DERIVED METRICS
+  # ============================================
+
+  - name: avg_weekday_vs_weekend_ratio
+    description: "Ratio of average weekday trips to weekend trips"
+    type: derived
+    label: "Weekday/Weekend Ratio"
+    type_params:
+      expr: weekday_trips / weekend_trips
+      metrics:
+        - weekday_trips
+        - weekend_trips
+
+  - name: rush_hour_vs_non_rush_ratio
+    description: "Ratio of rush hour trips to non-rush hour trips"
+    type: derived
+    label: "Rush Hour Intensity"
+    type_params:
+      expr: rush_hour_trips / (total_trips - rush_hour_trips)
+      metrics:
+        - rush_hour_trips
+        - total_trips

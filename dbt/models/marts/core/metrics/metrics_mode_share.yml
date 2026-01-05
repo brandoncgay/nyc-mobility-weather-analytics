@@ -1,0 +1,139 @@
+metrics:
+  # ============================================
+  # MODE-SPECIFIC TRIP COUNTS
+  # ============================================
+
+  - name: yellow_taxi_trips
+    description: "Total yellow taxi trips"
+    type: simple
+    label: "Yellow Taxi Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'yellow_taxi'
+
+  - name: fhv_trips
+    description: "Total FHV trips"
+    type: simple
+    label: "FHV Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'fhv'
+
+  - name: citibike_trips
+    description: "Total CitiBike trips"
+    type: simple
+    label: "CitiBike Trips"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'citibike'
+
+  # ============================================
+  # MODE SHARE PERCENTAGES
+  # ============================================
+
+  - name: yellow_taxi_mode_share_pct
+    description: "Yellow taxi mode share as percentage of total trips"
+    type: derived
+    label: "Yellow Taxi Mode Share %"
+    type_params:
+      expr: yellow_taxi_trips / total_trips * 100
+      metrics:
+        - yellow_taxi_trips
+        - total_trips
+
+  - name: fhv_mode_share_pct
+    description: "FHV mode share as percentage of total trips"
+    type: derived
+    label: "FHV Mode Share %"
+    type_params:
+      expr: fhv_trips / total_trips * 100
+      metrics:
+        - fhv_trips
+        - total_trips
+
+  - name: citibike_mode_share_pct
+    description: "CitiBike mode share as percentage of total trips"
+    type: derived
+    label: "CitiBike Mode Share %"
+    type_params:
+      expr: citibike_trips / total_trips * 100
+      metrics:
+        - citibike_trips
+        - total_trips
+
+  # ============================================
+  # MODE-SPECIFIC METRICS
+  # ============================================
+
+  - name: avg_yellow_taxi_fare
+    description: "Average yellow taxi fare"
+    type: simple
+    label: "Avg Yellow Taxi Fare"
+    type_params:
+      measure: avg_revenue_per_trip
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'yellow_taxi'
+
+  - name: total_yellow_taxi_revenue
+    description: "Total yellow taxi revenue"
+    type: simple
+    label: "Yellow Taxi Revenue"
+    type_params:
+      measure: total_revenue
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'yellow_taxi'
+
+  - name: avg_citibike_duration
+    description: "Average CitiBike trip duration"
+    type: simple
+    label: "Avg CitiBike Duration"
+    type_params:
+      measure: avg_trip_duration
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'citibike'
+
+  - name: avg_taxi_duration
+    description: "Average yellow taxi trip duration"
+    type: simple
+    label: "Avg Taxi Duration"
+    type_params:
+      measure: avg_trip_duration
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'yellow_taxi'
+
+  # ============================================
+  # RUSH HOUR MODE SHARE
+  # ============================================
+
+  - name: rush_hour_yellow_taxi_trips
+    description: "Yellow taxi trips during rush hour"
+    type: simple
+    label: "Rush Hour - Yellow Taxi"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'yellow_taxi'
+      AND {{ Dimension('trip__is_rush_hour') }} = true
+
+  - name: rush_hour_citibike_trips
+    description: "CitiBike trips during rush hour"
+    type: simple
+    label: "Rush Hour - CitiBike"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'citibike'
+      AND {{ Dimension('trip__is_rush_hour') }} = true
+
+  - name: weekend_citibike_trips
+    description: "CitiBike trips on weekends"
+    type: simple
+    label: "Weekend - CitiBike"
+    type_params:
+      measure: trip_count
+    filter: |
+      {{ Dimension('trip__trip_type') }} = 'citibike'
+      AND {{ Dimension('trip__is_weekend') }} = true
