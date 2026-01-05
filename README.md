@@ -405,31 +405,113 @@ poetry run pytest tests/integration/
 poetry run pytest --cov=src --cov-report=html
 ```
 
+## 🎭 MVP 2: Running the Dagster Orchestration (Phase 8 Complete!)
+
+MVP 2 Phase 8 is complete! Dagster now orchestrates the entire dbt transformation pipeline with scheduling, monitoring, and asset lineage tracking.
+
+### Starting Dagster UI
+
+```bash
+# Start the Dagster development server
+poetry run dagster dev -w orchestration/workspace.yaml
+
+# Then open http://localhost:3000 in your browser
+```
+
+### What You Can Do in Dagster UI
+
+1. **View Asset Lineage**
+   - See the complete data flow from staging → intermediate → marts
+   - Track dependencies between dbt models
+   - View data freshness and last materialization times
+
+2. **Materialize Assets**
+   - Run all dbt models with a single click
+   - Materialize specific models or groups
+   - See real-time execution logs
+
+3. **Monitor Pipeline Runs**
+   - View execution history and runtime statistics
+   - See detailed logs from dbt commands
+   - Track success/failure rates
+
+4. **Manage Schedules**
+   - Enable/disable the daily build schedule (2 AM UTC)
+   - Trigger manual runs
+   - View upcoming scheduled runs
+
+### Running dbt Transformations
+
+You can run dbt models directly or through Dagster:
+
+```bash
+# Option 1: Run through Dagster (recommended)
+poetry run dagster asset materialize -m orchestration --select dbt_analytics_assets
+
+# Option 2: Run dbt directly
+cd dbt
+poetry run dbt build  # Run all models and tests
+poetry run dbt run    # Run models only
+poetry run dbt test   # Run tests only
+```
+
+### Querying Metrics with MetricFlow
+
+After materializing the dbt models, query metrics using the semantic layer:
+
+```bash
+cd dbt
+
+# List all available metrics
+poetry run mf list metrics
+
+# Query a simple metric
+poetry run mf query --metrics total_trips --group-by trip__trip_type
+
+# Query with time dimension
+poetry run mf query --metrics total_trips --group-by metric_time__day
+
+# Query weather impact metrics
+poetry run mf query --metrics trips_in_adverse_weather,trips_in_pleasant_weather --group-by metric_time__month
+
+# Query derived metrics
+poetry run mf query --metrics revenue_per_mile --group-by trip__trip_type
+```
+
+For more details, see [orchestration/README.md](orchestration/README.md).
+
 ## 📁 Project Structure
 
 ```
 nyc-mobility-weather-analytics/
 ├── .github/workflows/      # GitHub Actions CI/CD
 ├── config/                 # Configuration files
-│   ├── dbt/               # dbt profiles
-│   └── dagster/           # Dagster configs
 ├── data/                  # Local data storage (gitignored)
 │   ├── raw/              # Raw downloaded data
-│   ├── bronze/           # Bronze layer outputs
-│   ├── silver/           # Silver layer outputs
-│   └── gold/             # Gold layer outputs
+│   ├── dagster_storage/  # Dagster metadata and run history
+│   └── nyc_mobility.duckdb # Main DuckDB database
 ├── docs/                  # Documentation
+├── logs/                  # Application logs
+│   └── dagster_compute/  # Dagster compute logs
 ├── notebooks/             # Jupyter notebooks for exploration
 ├── scripts/               # Utility and setup scripts
 ├── src/                   # Source code
-│   ├── ingestion/        # Data ingestion scripts
-│   ├── api/              # FastAPI service
+│   ├── ingestion/        # Data ingestion scripts (DLT pipelines)
+│   ├── api/              # FastAPI service (MVP 4)
 │   └── utils/            # Shared utilities
 ├── tests/                 # Test suite
 │   ├── unit/             # Unit tests
 │   └── integration/      # Integration tests
 ├── dbt/                   # dbt project (MVP 2)
-├── dagster/               # Dagster pipelines (MVP 2)
+│   ├── models/           # dbt models (staging, intermediate, marts)
+│   ├── tests/            # Custom dbt tests
+│   └── target/           # dbt build artifacts (manifest.json)
+├── orchestration/         # Dagster orchestration (MVP 2)
+│   ├── assets/           # Dagster asset definitions
+│   ├── resources/        # Resource configurations
+│   ├── schedules/        # Schedule definitions
+│   ├── workspace.yaml    # Dagster workspace config
+│   └── dagster.yaml      # Dagster instance config
 └── pyproject.toml        # Poetry configuration
 ```
 
@@ -468,17 +550,36 @@ nyc-mobility-weather-analytics/
 
 **Success:** ✅ All datasets ingested; 100% join coverage validated; data quality confirmed. Ready for MVP 2!
 
-### MVP 2 — ELT Pipeline + Medallion Architecture in DuckDB
+### 🚧 MVP 2 — ELT Pipeline + Medallion Architecture in DuckDB (IN PROGRESS - 80% Complete)
 
 **Goal:** Create structured, modeled data.
 
 **Includes:**
-- dbt project setup for data transformations
-- Bronze → Silver → Gold medallion architecture in DuckDB
-- Dagster to orchestrate DLT ingestion + dbt transformations
-- Data quality tests with dbt and Great Expectations
+- ✅ Phase 1: dbt project setup for data transformations
+- ✅ Phase 2: Staging models (Bronze layer - 4 models)
+- ✅ Phase 3: Intermediate models (1 minimal model)
+- ✅ Phase 4: Dimension tables (Silver layer - 4 models: date, time, weather, location)
+- ✅ Phase 5: Fact tables (Silver layer - 2 models: trips, hourly_mobility)
+- ✅ Phase 6: Semantic models (Gold layer - 2 models with entities, dimensions, measures)
+- ✅ Phase 7: Metrics (Gold layer - 50 governed metrics across 4 categories)
+- ✅ Phase 8: Dagster orchestration (assets, schedules, monitoring)
+- ⏳ Phase 9: Data quality tests with Great Expectations (PENDING)
+- ⏳ Phase 10: Documentation and finalization (PENDING)
 
-**Success:** End-to-end pipeline runs locally; gold tables ready for analytics.
+**Current Status:**
+- 12 dbt models built (staging → intermediate → marts)
+- 108 dbt tests passing (100% pass rate)
+- 50 MetricFlow metrics validated
+- Dagster UI running with full asset lineage
+- Daily schedule configured (2 AM UTC)
+- 99.9996% weather join coverage
+
+**Next Steps:**
+- Integrate Great Expectations for advanced data quality
+- Generate dbt docs and lineage
+- Create comprehensive documentation
+
+**Success Criteria:** ✅ 80% complete - End-to-end pipeline runs locally; gold tables and metrics ready for analytics.
 
 ### MVP 3 — Cloud Warehouse + Dashboard
 

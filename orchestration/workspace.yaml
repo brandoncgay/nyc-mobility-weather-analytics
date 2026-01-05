@@ -1,0 +1,6 @@
+# Dagster workspace configuration for NYC Mobility & Weather Analytics
+
+load_from:
+  - python_package:
+      package_name: orchestration
+      working_directory: ..
