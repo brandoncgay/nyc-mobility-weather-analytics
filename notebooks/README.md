@@ -57,6 +57,39 @@ Interactive notebooks for running, testing, and exploring the NYC Mobility & Wea
 - How do weekends differ from weekdays?
 - What's the mode share in different weather conditions?
 
+### 03_semantic_models_and_metrics.ipynb
+
+**Purpose:** Understand and explore the dbt semantic layer
+
+**What it does:**
+- 📚 Explains the semantic layer concept
+- 🎯 Documents 2 semantic models (trips, hourly_mobility)
+- 📊 Catalogs all 45 metrics across 4 categories
+- 🔍 Shows how to query metrics with SQL
+- 📈 Provides 5 working example analyses
+- 🎨 Includes visualizations (bar charts, pie charts)
+
+**Use this notebook to:**
+- Learn what semantic models are and why they matter
+- Understand the metrics available in the project
+- See how metrics map to SQL queries
+- Discover dimensions for slicing data
+- Find the right metric for your analysis
+
+**What you'll learn:**
+- Core Trip Metrics (13): trips, duration, distance, speed, revenue
+- Mode Share Metrics (13): transportation mode breakdowns
+- Time Pattern Metrics (16): rush hour, weekday/weekend, day parts
+- Weather Impact Metrics (13): precipitation, temperature effects
+- Metric types: Simple, Derived, Filtered
+
+**Example analyses included:**
+- Core metrics by transportation mode
+- Mode share percentages with visualization
+- Rush hour vs non-rush hour patterns
+- Weather impact on trip behavior
+- Day part distribution (morning/afternoon/evening/night)
+
 ---
 
 ## Getting Started
@@ -85,9 +118,10 @@ poetry run jupyter lab
 
 ### 3. Open a Notebook
 
-Navigate to the `notebooks/` directory and open either:
+Navigate to the `notebooks/` directory and open:
 - `01_pipeline_operations.ipynb` - for running the pipeline
 - `02_data_exploration_and_metrics.ipynb` - for data analysis
+- `03_semantic_models_and_metrics.ipynb` - for understanding the semantic layer
 
 ### 4. Run Cells
 

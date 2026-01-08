@@ -24,7 +24,11 @@ def citibike_source(year: int, months: list[int]):
         CitiBike trip data
     """
 
-    @dlt.resource(name="trips", write_disposition="replace")
+    @dlt.resource(
+        name="trips",
+        write_disposition="merge",
+        primary_key="ride_id"
+    )
     def trips() -> Iterator:
         """Download and yield CitiBike trip data.
 

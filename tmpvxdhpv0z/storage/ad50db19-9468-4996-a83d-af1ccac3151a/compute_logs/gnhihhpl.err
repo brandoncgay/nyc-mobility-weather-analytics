@@ -1,0 +1,35 @@
+2026-01-07 21:14:30 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - LOGS_CAPTURED - Started capturing logs in process (pid: 93409).
+2026-01-07 21:14:30 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - STEP_START - Started execution of step "monthly_dbt_transformation".
+2026-01-07 21:14:30 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_dbt_transformation - Loading file from: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpvxdhpv0z/storage/monthly_dlt_ingestion using PickledObjectFilesystemIOManager...
+2026-01-07 21:14:30 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - LOADED_INPUT - Loaded input "monthly_dlt_ingestion" using input manager "io_manager", from output "result" of step "monthly_dlt_ingestion"
+2026-01-07 21:14:30 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - STEP_INPUT - Got input "monthly_dlt_ingestion" of type "dict". (Type check passed).
+2026-01-07 21:14:30 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_dbt_transformation - Starting dbt transformation for 2025-08 data (incremental mode)
+2026-01-07 21:14:37 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_dbt_transformation - dbt stdout (last 2000 chars): tg_citibike__trips .......................... [RUN]
+[0m04:14:32  6 of 11 START sql view model core.stg_tlc__fhv_taxi ............................ [RUN]
+[0m04:14:32  1 of 11 OK created sql table model core_core.dim_date .......................... [[32mOK[0m in 0.08s]
+[0m04:14:32  4 of 11 OK created sql table model core_core.metricflow_time_spine ............. [[32mOK[0m in 0.13s]
+[0m04:14:32  7 of 11 START sql view model core.stg_tlc__yellow_taxi ......................... [RUN]
+[0m04:14:32  8 of 11 START sql view model core.stg_weather__hourly .......................... [RUN]
+[0m04:14:32  6 of 11 OK created sql view model core.stg_tlc__fhv_taxi ....................... [[32mOK[0m in 0.10s]
+[0m04:14:32  5 of 11 OK created sql view model core.stg_citibike__trips ..................... [[32mOK[0m in 0.10s]
+[0m04:14:32  7 of 11 OK created sql view model core.stg_tlc__yellow_taxi .................... [[32mOK[0m in 0.05s]
+[0m04:14:32  8 of 11 OK created sql view model core.stg_weather__hourly ..................... [[32mOK[0m in 0.08s]
+[0m04:14:32  9 of 11 START sql table model core_core.dim_weather ............................ [RUN]
+[0m04:14:32  9 of 11 OK created sql table model core_core.dim_weather ....................... [[32mOK[0m in 0.08s]
+[0m04:14:32  10 of 11 START sql incremental model core_core.fct_trips ....................... [RUN]
+[0m04:14:36  10 of 11 OK created sql incremental model core_core.fct_trips .................. [[32mOK[0m in 4.00s]
+[0m04:14:36  11 of 11 START sql incremental model core_core.fct_hourly_mobility ............. [RUN]
+[0m04:14:37  11 of 11 OK created sql incremental model core_core.fct_hourly_mobility ........ [[32mOK[0m in 0.55s]
+[0m04:14:37  
+[0m04:14:37  Finished running 5 table models, 4 view models, 2 incremental models in 0 hours 0 minutes and 4.98 seconds (4.98s).
+[0m04:14:37  
+[0m04:14:37  [32mCompleted successfully[0m
+[0m04:14:37  
+[0m04:14:37  Done. PASS=11 WARN=0 ERROR=0 SKIP=0 TOTAL=11
+
+2026-01-07 21:14:37 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_dbt_transformation - ✓ dbt run successful for 2025-08: 11 models completed
+2026-01-07 21:14:37 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - STEP_OUTPUT - Yielded output "result" of type "dict". (Type check passed).
+2026-01-07 21:14:37 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_dbt_transformation - Writing file at: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpvxdhpv0z/storage/monthly_dbt_transformation using PickledObjectFilesystemIOManager...
+2026-01-07 21:14:37 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - ASSET_MATERIALIZATION - Materialized value monthly_dbt_transformation.
+2026-01-07 21:14:37 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2026-01-07 21:14:37 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93409 - monthly_dbt_transformation - STEP_SUCCESS - Finished execution of step "monthly_dbt_transformation" in 7.53s.

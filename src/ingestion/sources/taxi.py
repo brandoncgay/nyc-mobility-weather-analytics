@@ -24,7 +24,11 @@ def taxi_source(year: int, months: list[int], taxi_types: list[str]):
         Taxi trip data resources
     """
 
-    @dlt.resource(name="yellow_taxi", write_disposition="replace")
+    @dlt.resource(
+        name="yellow_taxi",
+        write_disposition="merge",
+        primary_key=["tpep_pickup_datetime", "tpep_dropoff_datetime", "vendor_id", "pu_location_id"]
+    )
     def yellow_taxi() -> Iterator:
         """Download and yield Yellow Taxi trip data.
 
@@ -61,7 +65,11 @@ def taxi_source(year: int, months: list[int], taxi_types: list[str]):
                 # Continue with other months even if one fails
                 continue
 
-    @dlt.resource(name="fhv_taxi", write_disposition="replace")
+    @dlt.resource(
+        name="fhv_taxi",
+        write_disposition="merge",
+        primary_key=["pickup_datetime", "drop_off_datetime", "dispatching_base_num"]
+    )
     def fhv_taxi() -> Iterator:
         """Download and yield For-Hire Vehicle (FHV) trip data.
 

@@ -1,0 +1,17 @@
+2026-01-07 21:14:39 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - LOGS_CAPTURED - Started capturing logs in process (pid: 93449).
+2026-01-07 21:14:39 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - STEP_START - Started execution of step "monthly_data_validation".
+2026-01-07 21:14:39 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - Loading file from: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpvxdhpv0z/storage/monthly_dbt_transformation using PickledObjectFilesystemIOManager...
+2026-01-07 21:14:39 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - LOADED_INPUT - Loaded input "monthly_dbt_transformation" using input manager "io_manager", from output "result" of step "monthly_dbt_transformation"
+2026-01-07 21:14:39 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - STEP_INPUT - Got input "monthly_dbt_transformation" of type "dict". (Type check passed).
+2026-01-07 21:14:39 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - Validating data for 2025-08
+2026-01-07 21:14:40 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - Found 21,145 trips for 2025-08
+2026-01-07 21:14:40 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - Breakdown:
+     trip_type  trip_count  avg_distance  avg_duration
+0  yellow_taxi       13711      4.927938     15.108088
+1          fhv        7434           NaN     47.548964
+2026-01-07 21:14:40 -0700 - dagster - INFO - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - ✓ Validation successful: 21,145 trips loaded
+2026-01-07 21:14:40 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - STEP_OUTPUT - Yielded output "result" of type "dict". (Type check passed).
+2026-01-07 21:14:40 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - monthly_data_validation - Writing file at: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpvxdhpv0z/storage/monthly_data_validation using PickledObjectFilesystemIOManager...
+2026-01-07 21:14:40 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - ASSET_MATERIALIZATION - Materialized value monthly_data_validation.
+2026-01-07 21:14:40 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2026-01-07 21:14:40 -0700 - dagster - DEBUG - monthly_ingestion - ad50db19-9468-4996-a83d-af1ccac3151a - 93449 - monthly_data_validation - STEP_SUCCESS - Finished execution of step "monthly_data_validation" in 617ms.

@@ -1,0 +1,46 @@
+2026-01-07 18:17:39 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - LOGS_CAPTURED - Started capturing logs in process (pid: 70911).
+2026-01-07 18:17:39 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - monthly_dlt_ingestion - STEP_START - Started execution of step "monthly_dlt_ingestion".
+2026-01-07 18:17:39 -0700 - dagster - INFO - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - Starting DLT ingestion for 2025-09 (sources: taxi,citibike,weather)
+2026-01-07 18:17:39 -0700 - dagster - INFO - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - Running command: poetry run python /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/src/ingestion/run_pipeline.py --year 2025 --months 9 --sources taxi,citibike,weather
+2026-01-07 18:27:25 -0700 - dagster - INFO - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - DLT stdout (last 2000 chars): arted at 2026-01-08 01:27:23.675943+00:00 and COMPLETED in 1.77 seconds with 4 steps.
+Step extract COMPLETED in 0.89 seconds.
+
+Load package 1767835643.686141 is EXTRACTED and NOT YET LOADED to the destination and contains no failed jobs
+
+Step normalize COMPLETED in 0.37 seconds.
+Normalized data for the following tables:
+- hourly_weather: 720 row(s)
+
+Load package 1767835643.686141 is NORMALIZED and NOT YET LOADED to the destination and contains no failed jobs
+
+Step load COMPLETED in 0.51 seconds.
+Pipeline nyc_mobility load step completed in 0.49 seconds
+1 load package(s) were loaded to destination duckdb and into dataset raw_data
+The duckdb destination used duckdb:////Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/data/nyc_mobility.duckdb location to store data
+Load package 1767835643.686141 is LOADED and contains no failed jobs
+
+Step run COMPLETED in 1.77 seconds.
+Pipeline nyc_mobility load step completed in 0.49 seconds
+1 load package(s) were loaded to destination duckdb and into dataset raw_data
+The duckdb destination used duckdb:////Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/data/nyc_mobility.duckdb location to store data
+Load package 1767835643.686141 is LOADED and contains no failed jobs
+2026-01-07 18:27:25 - __main__ - INFO - 
+================================================================================
+2026-01-07 18:27:25 - __main__ - INFO - INGESTION COMPLETE
+2026-01-07 18:27:25 - __main__ - INFO - ================================================================================
+2026-01-07 18:27:25 - __main__ - INFO - Data stored in: ./data/nyc_mobility.duckdb
+2026-01-07 18:27:25 - __main__ - INFO - You can now explore the data using:
+2026-01-07 18:27:25 - __main__ - INFO -   - Jupyter notebooks in notebooks/
+2026-01-07 18:27:25 - __main__ - INFO -   - DuckDB CLI: duckdb data/nyc_mobility.duckdb
+2026-01-07 18:27:25 - __main__ - INFO -   - Python: import duckdb; conn = duckdb.connect('data/nyc_mobility.duckdb')
+
+2026-01-07 18:27:25 -0700 - dagster - WARNING - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - DLT stderr: /Users/brandoncgay/Library/Caches/pypoetry/virtualenvs/nyc-mobility-weather-analytics-No2Cn8th-py3.12/lib/python3.12/site-packages/dlt/helpers/dbt/__init__.py:3: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2026-01-07 18:20:59,027|[WARNING              ]|70919|8825839808|dlt|pipeline.py|run:665|The pipeline `run` method will now load the pending load packages. The data you passed to the run function will not be loaded. In order to do that you must run the pipeline again
+
+2026-01-07 18:27:25 -0700 - dagster - INFO - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - ✓ Successfully ingested data for 2025-09
+2026-01-07 18:27:25 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - monthly_dlt_ingestion - STEP_OUTPUT - Yielded output "result" of type "dict". (Type check passed).
+2026-01-07 18:27:25 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - monthly_dlt_ingestion - Writing file at: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpvxdhpv0z/storage/monthly_dlt_ingestion using PickledObjectFilesystemIOManager...
+2026-01-07 18:27:25 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - monthly_dlt_ingestion - ASSET_MATERIALIZATION - Materialized value monthly_dlt_ingestion.
+2026-01-07 18:27:25 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - monthly_dlt_ingestion - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2026-01-07 18:27:25 -0700 - dagster - DEBUG - monthly_ingestion - a9b82af9-193d-4086-b84d-fbeda1d7056d - 70911 - monthly_dlt_ingestion - STEP_SUCCESS - Finished execution of step "monthly_dlt_ingestion" in 9m45s.

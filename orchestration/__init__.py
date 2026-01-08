@@ -6,6 +6,7 @@ This package contains:
 - Resource configurations (DuckDB, dbt)
 - Schedules and sensors for pipeline orchestration
 - Logging and monitoring configuration
+- Monthly ingestion workflow for incremental backfills
 """
 
 from dagster import Definitions
@@ -17,7 +18,17 @@ from .assets.dlt_assets import (
     dlt_weather_raw,
     dlt_yellow_taxi_raw,
 )
-from .jobs import dbt_transformation_job, dlt_ingestion_job, full_pipeline_job
+from .assets.monthly_ingestion import (
+    monthly_data_validation,
+    monthly_dbt_transformation,
+    monthly_dlt_ingestion,
+)
+from .jobs import (
+    dbt_transformation_job,
+    dlt_ingestion_job,
+    full_pipeline_job,
+    monthly_ingestion_job,
+)
 from .resources import resources_by_env
 from .schedules import daily_dbt_schedule
 
@@ -32,11 +43,16 @@ defs = Definitions(
         dlt_ingestion_complete,
         # dbt transformation assets (depend on ingestion)
         dbt_analytics_assets,
+        # Monthly ingestion workflow assets
+        monthly_dlt_ingestion,
+        monthly_dbt_transformation,
+        monthly_data_validation,
     ],
     jobs=[
         full_pipeline_job,
         dlt_ingestion_job,
         dbt_transformation_job,
+        monthly_ingestion_job,
     ],
     resources=resources_by_env["dev"],
     schedules=[daily_dbt_schedule],

@@ -1,6 +1,9 @@
 {{
     config(
-        materialized='table',
+        materialized='incremental',
+        unique_key='hour_key',
+        incremental_strategy='delete+insert',
+        on_schema_change='sync_all_columns',
         tags=['silver', 'marts', 'fact']
     )
 }}
@@ -13,14 +16,38 @@
     - Trip counts and metrics aggregated by hour
     - Trip type breakdowns
     - Weather-mobility relationships
+
+    INCREMENTAL STRATEGY:
+    - On first run: Full refresh (loads all historical data)
+    - On subsequent runs: Only process hours with trips newer than max hour in table
+    - Uses delete+insert strategy for idempotent behavior
+    - Recomputes entire hour aggregate if any new trips arrive for that hour
 #}
 
 with trips as (
     select * from {{ ref('fct_trips') }}
+
+    {% if is_incremental() %}
+    -- Only process trips from hours not yet in the table (incremental mode)
+    -- This speeds up daily runs by only aggregating new hourly data
+    where date_trunc('hour', pickup_datetime) > (select max(hour_timestamp) from {{ this }})
+    {% endif %}
 ),
 
 hourly_aggregates as (
     select
+        -- ============================================
+        -- Surrogate key (unique identifier for each hour aggregate)
+        -- ============================================
+        {{ dbt_utils.generate_surrogate_key([
+            'date_trunc(\'hour\', pickup_datetime)',
+            'trip_type',
+            'temp_category',
+            'precipitation_type',
+            'is_weekend',
+            'day_part'
+        ]) }} as hour_key,
+
         -- ============================================
         -- Foreign keys to dimensions
         -- ============================================
@@ -98,7 +125,15 @@ hourly_aggregates as (
         max(case when is_good_cycling_weather then 1 else 0 end) as has_good_cycling_weather
 
     from trips
-    group by 1, 2, 3, 4, 5, 6, 7, 8
+    group by
+        date_key,
+        time_key,
+        trip_type,
+        temp_category,
+        precipitation_type,
+        is_weekend,
+        day_part,
+        date_trunc('hour', pickup_datetime)
 )
 
 select * from hourly_aggregates

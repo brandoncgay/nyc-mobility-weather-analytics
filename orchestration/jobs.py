@@ -29,3 +29,21 @@ dbt_transformation_job = define_asset_job(
     description="Run dbt transformations only (assumes raw data exists)",
     selection=AssetSelection.all() - AssetSelection.groups("ingestion"),
 )
+
+# Monthly ingestion job: Load one month at a time with validation
+monthly_ingestion_job = define_asset_job(
+    name="monthly_ingestion",
+    description="Load data for one month: DLT ingestion → dbt transformation → validation",
+    selection=AssetSelection.groups("monthly_ingestion"),
+    config={
+        "ops": {
+            "monthly_dlt_ingestion": {
+                "config": {
+                    "year": 2025,
+                    "month": 10,
+                    "sources": "taxi,citibike,weather",
+                }
+            }
+        }
+    },
+)

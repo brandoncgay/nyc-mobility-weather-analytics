@@ -25,7 +25,7 @@ def weather_source(year: int, months: list[int], api_key: str = None):
 
     @dlt.resource(
         name="hourly_weather",
-        write_disposition="replace",
+        write_disposition="merge",
         primary_key="timestamp",
     )
     def hourly_weather() -> Iterator:

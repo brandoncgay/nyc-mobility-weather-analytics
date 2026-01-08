@@ -31,6 +31,9 @@ dagster-webserver = "^1.7.0"
 great-expectations = "^0.18.0"
 dbt-metricflow = "^0.7.0"
 duckdb-engine = "^0.17.0"
+streamlit = "^1.52.2"
+plotly = "^6.5.1"
+watchdog = "~4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing

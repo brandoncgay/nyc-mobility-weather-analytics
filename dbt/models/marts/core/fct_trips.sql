@@ -1,6 +1,9 @@
 {{
     config(
-        materialized='table',
+        materialized='incremental',
+        unique_key='trip_key',
+        incremental_strategy='delete+insert',
+        on_schema_change='sync_all_columns',
         tags=['silver', 'marts', 'fact']
     )
 }}
@@ -14,10 +17,22 @@
     - Time-based attributes and flags
     - Weather enrichment
     - Foreign keys to all dimensions
+
+    INCREMENTAL STRATEGY:
+    - On first run: Full refresh (loads all historical data)
+    - On subsequent runs: Only process trips with pickup_datetime newer than max in table
+    - Uses delete+insert strategy for idempotent behavior
+    - Handles late-arriving data by reprocessing based on unique_key
 #}
 
 with trips_unioned as (
     select * from {{ ref('int_trips__unioned') }}
+
+    {% if is_incremental() %}
+    -- Only process new trips (incremental mode)
+    -- This dramatically speeds up daily runs by only processing new data
+    where pickup_datetime > (select max(pickup_datetime) from {{ this }})
+    {% endif %}
 ),
 
 trips_with_metrics as (
