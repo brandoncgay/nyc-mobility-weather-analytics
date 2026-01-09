@@ -12,20 +12,25 @@ Analyze how weather affects NYC transportation patterns across 14M+ trips from Y
 - Python 3.11+
 - Poetry
 
-### Get Running in 3 Commands
+### Get Running in 4 Commands
 
 ```bash
 # 1. Install
 poetry install
 
-# 2. Run pipeline
+# 2. Ingest data (5-10 minutes for Oct-Nov 2025)
+poetry run python src/ingestion/run_pipeline.py
+
+# 3. Transform data
 cd dbt && poetry run dbt build
 
-# 3. Start dashboard
-poetry run streamlit run dashboard.py
+# 4. Start dashboard
+cd .. && poetry run streamlit run dashboard.py
 ```
 
 **Dashboard opens at**: http://localhost:8501
+
+**Note**: First-time setup takes ~15 minutes (mostly data download). Subsequent runs are much faster.
 
 ---
 
@@ -50,6 +55,8 @@ The Streamlit dashboard provides visual analytics across:
 
 ## 🔧 Running the Pipeline
 
+**First time?** Run data ingestion first (see Quick Start above)
+
 ### Option 1: Dashboard (Recommended)
 ```bash
 poetry run streamlit run dashboard.py
@@ -67,6 +74,14 @@ poetry run dbt build  # Run all models + tests (30 seconds)
 poetry run dagster dev -w orchestration/workspace.yaml
 ```
 Opens Dagster UI at http://localhost:3000 with full lineage visualization
+
+### Option 4: Complete Pipeline (Ingestion + Transformation)
+```bash
+# Run everything from scratch
+poetry run python src/ingestion/run_pipeline.py  # DLT ingestion
+cd dbt && poetry run dbt build                    # dbt transformations
+cd .. && poetry run streamlit run dashboard.py    # Dashboard
+```
 
 ---
 
@@ -201,8 +216,18 @@ poetry run dagster dev -w orchestration/workspace.yaml
 # Check database exists
 ls -lh data/nyc_mobility.duckdb  # Should be ~2.5GB
 
-# Rebuild if needed
+# If database missing or empty, run ingestion first
+poetry run python src/ingestion/run_pipeline.py
+
+# Then rebuild transformations
 cd dbt && poetry run dbt build
+```
+
+### No Data / Empty Database
+```bash
+# Run the complete pipeline from scratch
+poetry run python src/ingestion/run_pipeline.py  # Download data (5-10 min)
+cd dbt && poetry run dbt build                    # Transform data (30 sec)
 ```
 
 ---
