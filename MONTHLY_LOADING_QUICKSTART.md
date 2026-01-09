@@ -5,11 +5,11 @@
 ## ✓ Setup Complete
 
 Your Dagster orchestration is now configured with:
-- ✅ 3 monthly ingestion assets (DLT → dbt → Validation)
-- ✅ monthly_ingestion job 
+- ✅ 4 monthly ingestion assets (DLT → dbt → Validation → Great Expectations)
+- ✅ monthly_ingestion job
 - ✅ Configurable year/month parameters
 - ✅ Automatic incremental transformations
-- ✅ Data quality validation
+- ✅ Comprehensive data quality validation with Great Expectations
 
 ## ⚠️ Important: Stop the Dashboard First
 
@@ -86,12 +86,24 @@ poetry run python scripts/dagster_monthly_backfill.py --year 2025 --months 10,11
 2. **dbt Transformation** (<1 second for incremental)
    - Processes only new data
    - Updates fact and dimension tables
-   - Runs data quality tests
+   - Skips tests (tests run in GE step)
 
-3. **Validation** (~1 second)
+3. **Basic Validation** (~1 second)
    - Counts trips loaded
-   - Validates data quality
    - Shows breakdown by mode (taxi/FHV/CitiBike)
+   - Validates data exists
+
+4. **Great Expectations Validation** (~5-10 seconds) ⭐ NEW
+   - Runs 5 comprehensive validation suites:
+     - Staging models: yellow_taxi, fhv_taxi, citibike, weather
+     - Fact tables: fct_trips
+   - Checks data quality expectations:
+     - Null checks on required fields
+     - Unique key constraints
+     - Value range validations (distances, amounts)
+     - Trip metrics validity
+   - Logs detailed failures if any
+   - Pipeline continues even with warnings (investigate later)
 
 ## Monitoring
 

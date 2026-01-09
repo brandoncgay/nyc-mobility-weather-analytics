@@ -1,0 +1,17 @@
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - LOGS_CAPTURED - Started capturing logs in process (pid: 49983).
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - STEP_START - Started execution of step "monthly_data_validation".
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - Loading file from: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpjnvmf9r0/storage/monthly_dbt_transformation using PickledObjectFilesystemIOManager...
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - LOADED_INPUT - Loaded input "monthly_dbt_transformation" using input manager "io_manager", from output "result" of step "monthly_dbt_transformation"
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - STEP_INPUT - Got input "monthly_dbt_transformation" of type "dict". (Type check passed).
+[32m2026-01-08 16:40:46 -0700[0m - dagster - [34mINFO[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - Validating data for 2025-07
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mINFO[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - Found 0 trips for 2025-07
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mINFO[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - Breakdown:
+Empty DataFrame
+Columns: [trip_type, trip_count, avg_distance, avg_duration]
+Index: []
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mWARNING[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - ⚠️ No trips found for 2025-07
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - STEP_OUTPUT - Yielded output "result" of type "dict". (Type check passed).
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - monthly_data_validation - Writing file at: /Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/tmpjnvmf9r0/storage/monthly_data_validation using PickledObjectFilesystemIOManager...
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - ASSET_MATERIALIZATION - Materialized value monthly_data_validation.
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2026-01-08 16:40:47 -0700[0m - dagster - [34mDEBUG[0m - monthly_ingestion - ca689360-9d5b-4cee-be68-4d926d9be3b8 - 49983 - monthly_data_validation - STEP_SUCCESS - Finished execution of step "monthly_data_validation" in 973ms.

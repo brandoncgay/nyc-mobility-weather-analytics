@@ -22,6 +22,7 @@ from .assets.monthly_ingestion import (
     monthly_data_validation,
     monthly_dbt_transformation,
     monthly_dlt_ingestion,
+    monthly_ge_validation,
 )
 from .jobs import (
     dbt_transformation_job,
@@ -47,6 +48,7 @@ defs = Definitions(
         monthly_dlt_ingestion,
         monthly_dbt_transformation,
         monthly_data_validation,
+        monthly_ge_validation,
     ],
     jobs=[
         full_pipeline_job,

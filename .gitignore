@@ -73,6 +73,7 @@ dbt/dbt_modules/
 dagster/tmp/
 dagster/logs/
 dagster_home/
+tmp*/  # Dagster temp storage (e.g., tmpvxdhpv0z/)
 
 # ML/AI
 *.pkl
@@ -97,6 +98,9 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# Great Expectations
+great_expectations/uncommitted/
 
 # Poetry
 poetry.toml
