@@ -12,14 +12,23 @@
     Authoritative date dimension with calendar attributes and business flags.
 #}
 
-with date_spine as (
-    {{
-        dbt_utils.date_spine(
-            datepart="day",
-            start_date="cast('2025-09-01' as date)",
-            end_date="cast('2025-12-31' as date)"
+-- Get the actual date range from the data
+with date_bounds as (
+    select
+        min(cast(pickup_datetime as date)) as min_date,
+        max(cast(pickup_datetime as date)) as max_date
+    from {{ ref('int_trips__unioned') }}
+),
+
+-- Generate date spine covering all trip dates
+date_spine as (
+    select unnest(
+        generate_series(
+            (select min_date from date_bounds),
+            (select max_date from date_bounds),
+            interval '1 day'
         )
-    }}
+    )::date as date_day
 ),
 
 date_dimension as (
