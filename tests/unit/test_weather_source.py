@@ -52,11 +52,12 @@ class TestWeatherSource:
         url = first_call[0][0]
         params = first_call[1].get('params', {})
 
-        assert url == "https://api.openweathermap.org/data/2.5/onecall/timemachine"
-        assert params['lat'] == 40.7128
-        assert params['lon'] == -74.0060
-        assert params['appid'] == api_key
-        assert params['units'] == "metric"
+        # Using Open-Meteo API (free, no API key required)
+        assert url == "https://archive-api.open-meteo.com/v1/archive"
+        assert params['latitude'] == 40.7128
+        assert params['longitude'] == -74.0060
+        # Open-Meteo doesn't require API key
+        assert 'appid' not in params
 
     @patch('requests.get')
     @patch('time.sleep')

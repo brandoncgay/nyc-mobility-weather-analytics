@@ -39,8 +39,6 @@ def mock_env(monkeypatch) -> None:
         "DUCKDB_PATH": ":memory:",
         "NYC_TLC_BASE_URL": "https://test.example.com/tlc",
         "CITIBIKE_BASE_URL": "https://test.example.com/citibike",
-        "OPENWEATHER_API_KEY": "test_api_key",
-        "OPENWEATHER_BASE_URL": "https://test.example.com/weather",
     }
 
     for key, value in test_env.items():

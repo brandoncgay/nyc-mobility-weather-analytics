@@ -75,17 +75,6 @@ class Config:
         """Get CitiBike data base URL."""
         return self.get("CITIBIKE_BASE_URL", "https://s3.amazonaws.com/tripdata")
 
-    @property
-    def openweather_api_key(self) -> str:
-        """Get OpenWeather API key."""
-        return self.get("OPENWEATHER_API_KEY", required=True)
-
-    @property
-    def openweather_base_url(self) -> str:
-        """Get OpenWeather API base URL."""
-        return self.get(
-            "OPENWEATHER_BASE_URL", "https://api.openweathermap.org/data/2.5"
-        )
 
 
 # Global config instance

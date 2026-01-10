@@ -3,11 +3,85 @@
 import dlt
 import requests
 from datetime import datetime, timedelta
-from typing import Iterator
+from typing import Iterator, Dict, Any
 
+from src.ingestion.errors import TransientError, PermanentError
 from src.utils.logger import get_logger
+from src.utils.retry import retry_on_transient_error
 
 logger = get_logger(__name__)
+
+
+@retry_on_transient_error(max_attempts=3, min_wait=2, max_wait=60)
+def _fetch_weather_data(
+    api_url: str,
+    params: Dict[str, Any],
+    year: int,
+    month: int
+) -> Dict[str, Any]:
+    """Fetch weather data for a single month with retry logic.
+
+    Args:
+        api_url: Open-Meteo API URL
+        params: Request parameters (lat, lon, date range, etc.)
+        year: Year
+        month: Month number
+
+    Returns:
+        API response JSON data
+
+    Raises:
+        TransientError: Retryable failures (network, rate limit, server errors)
+        PermanentError: Non-retryable failures (bad request, data issues)
+    """
+    try:
+        logger.debug(f"Fetching weather data from Open-Meteo API: {year}-{month:02d}")
+        response = requests.get(api_url, params=params, timeout=30)
+
+        # Check HTTP status codes
+        if response.status_code == 400:
+            logger.error(f"Bad request for {year}-{month:02d} (400)")
+            raise PermanentError(f"Bad request - check parameters: {response.text}")
+        elif response.status_code == 429:
+            logger.warning(f"Rate limited for {year}-{month:02d}, will retry")
+            raise TransientError(f"Rate limit exceeded (10,000 requests/day limit)")
+        elif response.status_code >= 500:
+            logger.warning(f"Server error {response.status_code}, will retry")
+            raise TransientError(f"Server error {response.status_code}")
+        elif response.status_code != 200:
+            logger.error(f"Unexpected status {response.status_code}")
+            raise PermanentError(f"HTTP {response.status_code}: {response.text}")
+
+        # Parse JSON response
+        data = response.json()
+
+        # Validate response structure
+        if "hourly" not in data:
+            raise PermanentError(f"Missing 'hourly' key in response")
+
+        hourly_data = data["hourly"]
+        if "time" not in hourly_data or not hourly_data["time"]:
+            raise PermanentError(f"No hourly data returned in response")
+
+        logger.info(f"✓ Fetched {len(hourly_data['time'])} hourly records for {year}-{month:02d}")
+        return data
+
+    except requests.exceptions.Timeout as e:
+        logger.warning(f"Timeout fetching weather for {year}-{month:02d}")
+        raise TransientError(f"Timeout: {e}")
+    except requests.exceptions.ConnectionError as e:
+        logger.warning(f"Connection error for {year}-{month:02d}")
+        raise TransientError(f"Connection error: {e}")
+    except (TransientError, PermanentError):
+        # Re-raise our custom errors
+        raise
+    except ValueError as e:
+        # JSON parsing error
+        logger.error(f"Invalid JSON response for {year}-{month:02d}")
+        raise PermanentError(f"JSON parsing error: {e}")
+    except Exception as e:
+        logger.exception(f"Unexpected error fetching weather for {year}-{month:02d}")
+        raise PermanentError(f"Processing error: {e}")
 
 
 @dlt.source(name="weather")
@@ -44,7 +118,10 @@ def weather_source(year: int, months: list[int], api_key: str = None):
         lat, lon = 40.7128, -74.0060  # NYC coordinates
         api_url = "https://archive-api.open-meteo.com/v1/archive"
 
+        logger.info(f"Starting weather ingestion for {year}, months: {months}")
+
         total_records = 0
+        failed_months = {}
 
         for month in months:
             # Calculate date range for this month
@@ -86,18 +163,12 @@ def weather_source(year: int, months: list[int], api_key: str = None):
             }
 
             try:
-                # Make API call
-                response = requests.get(api_url, params=params, timeout=30)
-                response.raise_for_status()
-                data = response.json()
+                # Fetch data with retry logic
+                data = _fetch_weather_data(api_url, params, year, month)
 
                 # Extract hourly data
-                hourly_data = data.get("hourly", {})
-                times = hourly_data.get("time", [])
-
-                if not times:
-                    logger.warning(f"No hourly data returned for {year}-{month:02d}")
-                    continue
+                hourly_data = data["hourly"]
+                times = hourly_data["time"]
 
                 # Build records from hourly data
                 batch = []
@@ -120,20 +191,26 @@ def weather_source(year: int, months: list[int], api_key: str = None):
 
                 total_records += len(batch)
 
-                logger.info(
-                    f"Fetched {len(batch)} hourly records for {year}-{month:02d}"
-                )
-
                 # Yield the batch for this month
                 yield batch
 
-            except requests.exceptions.HTTPError as e:
-                logger.error(f"HTTP error for {year}-{month:02d}: {e}")
+            except PermanentError as e:
+                logger.error(f"Permanently failed {year}-{month:02d}: {e}")
+                failed_months[f"{year}-{month:02d}"] = str(e)
+                continue  # Skip to next month
+            except TransientError as e:
+                # Should not reach here - retry decorator exhausted
+                logger.error(f"Retry exhausted for {year}-{month:02d}: {e}")
+                failed_months[f"{year}-{month:02d}"] = str(e)
+                continue
+            except Exception as e:
+                # Catch any unexpected errors during record building
+                logger.exception(f"Failed to process weather data for {year}-{month:02d}: {e}")
+                failed_months[f"{year}-{month:02d}"] = str(e)
                 continue
 
-            except Exception as e:
-                logger.error(f"Failed to fetch weather for {year}-{month:02d}: {e}")
-                continue
+        if failed_months:
+            logger.warning(f"Weather failed months: {failed_months}")
 
         logger.info(
             f"Weather data collection complete: {total_records:,} hourly records"

@@ -3,7 +3,8 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import pyarrow as pa
-from src.ingestion.sources.taxi import taxi_source
+from src.ingestion.sources.taxi import taxi_source, _download_month_data
+from src.ingestion.errors import TransientError, PermanentError
 
 
 class TestTaxiSource:
@@ -153,3 +154,168 @@ class TestTaxiSource:
         # This tests that months are formatted with leading zeros
         # The actual URL construction happens in the resource function
         assert source is not None
+
+
+class TestTaxiRetryBehavior:
+    """Tests for retry logic in taxi data download."""
+
+    @patch('requests.get')
+    def test_retry_on_rate_limit(self, mock_get):
+        """Test that rate limits (429) trigger retry and eventually succeed."""
+        # Create mock parquet data
+        mock_table = Mock()
+        mock_table.to_pylist.return_value = [{"id": 1, "fare": 10.5}]
+
+        # First call: rate limit, second call: success
+        mock_get.side_effect = [
+            Mock(status_code=429),
+            Mock(status_code=200, content=b"mock_parquet_data"),
+        ]
+
+        with patch('pyarrow.parquet.read_table', return_value=mock_table):
+            records = _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 2  # Retried once
+        assert len(records) > 0
+
+    @patch('requests.get')
+    def test_retry_on_server_error(self, mock_get):
+        """Test that 5xx server errors trigger retry."""
+        mock_table = Mock()
+        mock_table.to_pylist.return_value = [{"id": 1}]
+
+        # First call: 503 error, second call: success
+        mock_get.side_effect = [
+            Mock(status_code=503),
+            Mock(status_code=200, content=b"mock_parquet_data"),
+        ]
+
+        with patch('pyarrow.parquet.read_table', return_value=mock_table):
+            records = _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 2  # Retried once
+        assert len(records) > 0
+
+    @patch('requests.get')
+    def test_no_retry_on_404(self, mock_get):
+        """Test that 404 errors don't retry (permanent failure)."""
+        mock_get.return_value = Mock(status_code=404)
+
+        with pytest.raises(PermanentError):
+            _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 1  # No retry
+
+    @patch('requests.get')
+    def test_no_retry_on_auth_error(self, mock_get):
+        """Test that 401/403 errors don't retry (permanent failure)."""
+        mock_get.return_value = Mock(status_code=401)
+
+        with pytest.raises(PermanentError):
+            _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 1  # No retry
+
+    @patch('requests.get')
+    def test_retry_exhaustion(self, mock_get):
+        """Test that retries eventually give up after max attempts."""
+        # Always return rate limit error
+        mock_get.return_value = Mock(status_code=429)
+
+        with pytest.raises(TransientError):
+            _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 3  # max_attempts=3
+
+    @patch('requests.get')
+    def test_retry_on_timeout(self, mock_get):
+        """Test that timeout errors trigger retry."""
+        import requests
+
+        mock_table = Mock()
+        mock_table.to_pylist.return_value = [{"id": 1}]
+
+        # First call: timeout, second call: success
+        mock_get.side_effect = [
+            requests.exceptions.Timeout("Connection timed out"),
+            Mock(status_code=200, content=b"mock_parquet_data"),
+        ]
+
+        with patch('pyarrow.parquet.read_table', return_value=mock_table):
+            records = _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 2  # Retried once
+        assert len(records) > 0
+
+    @patch('requests.get')
+    def test_retry_on_connection_error(self, mock_get):
+        """Test that connection errors trigger retry."""
+        import requests
+
+        mock_table = Mock()
+        mock_table.to_pylist.return_value = [{"id": 1}]
+
+        # First call: connection error, second call: success
+        mock_get.side_effect = [
+            requests.exceptions.ConnectionError("Failed to connect"),
+            Mock(status_code=200, content=b"mock_parquet_data"),
+        ]
+
+        with patch('pyarrow.parquet.read_table', return_value=mock_table):
+            records = _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert mock_get.call_count == 2  # Retried once
+        assert len(records) > 0
+
+    @patch('requests.get')
+    def test_empty_records_no_error(self, mock_get):
+        """Test that empty parquet files are handled gracefully."""
+        mock_table = Mock()
+        mock_table.to_pylist.return_value = []
+
+        mock_get.return_value = Mock(status_code=200, content=b"mock_parquet_data")
+
+        with patch('pyarrow.parquet.read_table', return_value=mock_table):
+            records = _download_month_data(
+                "https://test.com/data.parquet",
+                2025,
+                10,
+                "yellow"
+            )
+
+        assert records == []  # Empty list, not error

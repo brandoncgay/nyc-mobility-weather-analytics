@@ -39,8 +39,6 @@ def test_config_properties(mock_env):
 
     assert config.nyc_tlc_base_url == "https://test.example.com/tlc"
     assert config.citibike_base_url == "https://test.example.com/citibike"
-    assert config.openweather_api_key == "test_api_key"
-    assert config.openweather_base_url == "https://test.example.com/weather"
 
 
 def test_config_with_missing_env_file():

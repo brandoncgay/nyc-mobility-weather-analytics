@@ -237,11 +237,9 @@ class TestDLTPipelineIntegration:
     def test_pipeline_configuration(self, mock_config):
         """Test that pipeline uses configuration correctly."""
         mock_config.duckdb_path = "test_path.duckdb"
-        mock_config.openweather_api_key = "test_key"
 
         # Verify configuration is accessible
         assert mock_config.duckdb_path == "test_path.duckdb"
-        assert mock_config.openweather_api_key == "test_key"
 
     @patch('pyarrow.parquet.read_table')
     def test_write_disposition_replace(self, mock_read_table, mock_pipeline):

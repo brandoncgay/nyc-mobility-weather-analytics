@@ -96,22 +96,15 @@ def run_ingestion_pipeline(
         logger.info("INGESTING WEATHER DATA")
         logger.info("=" * 80)
 
-        # Check if API key is configured
-        if config.openweather_api_key == "your_api_key_here" or not config.openweather_api_key:
-            logger.error(
-                "OpenWeather API key not configured. "
-                "Please set OPENWEATHER_API_KEY in your .env file."
-            )
-            logger.error("Skipping weather ingestion.")
-        else:
-            try:
-                weather_data = weather_source(year, months, config.openweather_api_key)
-                info = pipeline.run(weather_data)
+        try:
+            # Using Open-Meteo API (free, no API key required)
+            weather_data = weather_source(year, months)
+            info = pipeline.run(weather_data)
 
-                logger.info("Weather ingestion completed successfully")
-                logger.info(f"Load info: {info}")
+            logger.info("Weather ingestion completed successfully")
+            logger.info(f"Load info: {info}")
 
-            except Exception as e:
+        except Exception as e:
                 logger.error(f"Weather ingestion failed: {e}")
                 logger.exception("Full traceback:")
 

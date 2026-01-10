@@ -2,7 +2,7 @@
 
 Analyze how weather affects NYC transportation patterns across 14M+ trips from Yellow Taxi, FHV (Uber/Lyft), and CitiBike.
 
-**Status**: ✅ MVP 2 Complete - Production ready for local development
+**Status**: ✅ MVP 3 Complete - Production-ready with automatic retry logic
 
 ---
 
@@ -191,6 +191,56 @@ poetry run dbt run --select dim_weather+
 
 ---
 
+## 🔄 Error Handling & Resilience
+
+The pipeline implements production-grade error handling for reliable data ingestion:
+
+### Automatic Retry Logic
+
+Network errors and API rate limits trigger automatic retries with exponential backoff:
+
+- **Max attempts**: 3 retries per failed request
+- **Wait time**: 1-60 seconds with exponential backoff
+- **Smart error classification**:
+  - **Transient errors** (retry automatically): Timeouts, connection errors, HTTP 429/5xx
+  - **Permanent errors** (fail fast): HTTP 404, 401/403, data validation errors
+
+### Failed Month Tracking
+
+If some months fail during ingestion, the pipeline continues processing remaining months and logs failures:
+
+```bash
+# Check logs for failed months
+grep "failed months" logs/ingestion.log
+```
+
+Failed months don't stop the pipeline. Simply re-run ingestion to retry failed months:
+
+```bash
+poetry run python src/ingestion/run_pipeline.py --year 2025 --months 10,11
+```
+
+### Monitoring Ingestion
+
+Watch for these success indicators in logs:
+
+```
+✓ Downloaded CitiBike ZIP for 2025-10
+✓ Loaded 2,145,678 yellow taxi records for 2025-10
+✓ Fetched 744 hourly records for 2025-10
+```
+
+### Retry Configuration
+
+Default settings (configurable in `src/utils/retry.py`):
+
+- Max attempts: 3
+- Min wait: 2 seconds
+- Max wait: 60 seconds
+- Retryable errors: TransientError (network, rate limits, server errors)
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Database Locked
@@ -269,7 +319,8 @@ June 30 - November 30, 2025 (154 days)
 - **[great_expectations/README.md](great_expectations/README.md)** - Data quality validation
 - **[notebooks/README.md](notebooks/README.md)** - Jupyter notebooks
 
-### Project History
+### Project History & Migration Guides
+- **[MVP3_CHANGES.md](docs/MVP3_CHANGES.md)** - MVP 3 production readiness improvements & upgrade guide
 - **[MVP2_COMPLETION_SUMMARY.md](docs/MVP2_COMPLETION_SUMMARY.md)** - What was built in MVP 2
 
 ---
@@ -338,16 +389,23 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## 🔮 Roadmap
 
-### MVP 3 (Next)
-- Migrate to Snowflake (cloud warehouse)
+### ✅ MVP 3 Complete
+- Production-grade error handling with automatic retries
+- Environment-based configuration management
+- Security cleanup (removed unused API references)
+- Comprehensive retry behavior testing
+
+### Next: Snowflake Migration
+- SQL dialect conversion (DuckDB → Snowflake compatibility)
+- Multi-database support (DuckDB + Snowflake)
+- Cloud deployment infrastructure
 - Incremental models for scalability
-- Enhanced dashboard (Hex or continue with Streamlit)
-- CI/CD pipeline (GitHub Actions)
 
 ### Future Enhancements
+- CI/CD pipeline (GitHub Actions)
 - Real-time streaming (Kafka)
 - ML forecasting models
-- Multiple weather stations
+- Enhanced dashboard (Hex or modern alternative)
 - API layer (FastAPI)
 - Public web interface
 
@@ -404,4 +462,4 @@ MIT License - See LICENSE file for details
 
 **Built with**: Python • dbt • DuckDB • Dagster • Streamlit • MetricFlow
 
-*Last Updated: January 9, 2026*
+*Last Updated: January 10, 2026 - MVP 3*
