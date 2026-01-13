@@ -58,7 +58,9 @@ class TestDLTPipelineIntegration:
         assert info.has_failed_jobs is False
 
         # Verify data was loaded into DuckDB
-        conn = duckdb.connect(mock_pipeline.pipeline_name + ".duckdb")
+        # Get the actual database path from the pipeline destination
+        db_path = mock_pipeline.destination.config_params['credentials']
+        conn = duckdb.connect(db_path)
         try:
             result = conn.execute("SELECT COUNT(*) FROM raw_data.yellow_taxi").fetchone()
             assert result[0] >= 1  # At least some records loaded
@@ -126,19 +128,9 @@ class TestDLTPipelineIntegration:
         # Run pipeline for just one day
         weather_data = weather_source(2023, [10], "test_api_key")
 
-        # Limit to a few iterations to avoid long test runs
-        limited_data = []
-        for i, batch in enumerate(weather_data()):
-            limited_data.extend(batch)
-            if i >= 2:  # Just a few days
-                break
-
-        # Manually run pipeline with limited data
-        @dlt.resource(name="limited_weather", write_disposition="replace")
-        def limited_weather():
-            yield limited_data
-
-        info = mock_pipeline.run(limited_weather)
+        # Run pipeline directly with the weather source
+        # DltSource is already iterable, no need to manually extract batches
+        info = mock_pipeline.run(weather_data)
 
         # Verify pipeline ran successfully
         assert info is not None

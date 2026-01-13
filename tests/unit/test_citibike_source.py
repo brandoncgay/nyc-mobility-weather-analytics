@@ -5,48 +5,51 @@ from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 from io import BytesIO
 from zipfile import ZipFile
-from src.ingestion.sources.citibike import citibike_source
+from src.ingestion.sources.citibike import citibike_source, _download_month_data
+from src.ingestion.errors import TransientError, PermanentError
 
 
 class TestCitiBikeSource:
     """Tests for citibike_source DLT source."""
 
     def test_citibike_source_returns_resource(self):
-        """Test that citibike_source returns a resource."""
+        """Test that citibike_source returns a DLT source."""
         source = citibike_source(2023, [10])
 
-        # DLT sources return a resource or list of resources
+        # DLT sources return a DltSource object with resources
         assert source is not None
+        assert hasattr(source, 'resources')
+        assert "trips" in source.resources
 
-    @patch('requests.get')
-    def test_citibike_url_format(self, mock_get):
+    @patch('src.ingestion.sources.citibike._download_month_data')
+    def test_citibike_url_format(self, mock_download):
         """Test that CitiBike constructs correct URLs."""
-        # Create a mock ZIP file
+        # Create mock CSV data as bytes (what _download_month_data returns)
         csv_data = b"ride_id,started_at,ended_at\n1,2023-10-01,2023-10-01"
         zip_buffer = BytesIO()
         with ZipFile(zip_buffer, 'w') as zip_file:
             zip_file.writestr("202310-citibike-tripdata.csv", csv_data)
         zip_buffer.seek(0)
 
-        mock_response = Mock()
-        mock_response.content = zip_buffer.getvalue()
-        mock_get.return_value = mock_response
+        mock_download.return_value = zip_buffer.getvalue()
 
         source = citibike_source(2023, [10])
+        trips_resource = source.resources["trips"]
 
         # Consume the generator
         try:
-            list(source())
+            list(trips_resource())
         except Exception:
             pass  # May fail in test environment
 
-        # Verify URL was constructed correctly
-        expected_url = "https://s3.amazonaws.com/tripdata/202310-citibike-tripdata.csv.zip"
-        mock_get.assert_called_with(expected_url, timeout=120)
+        # Verify download was called with correct URL
+        assert mock_download.call_count == 1
+        expected_url = "https://s3.amazonaws.com/tripdata/202310-citibike-tripdata.zip"
+        assert mock_download.call_args[0][0] == expected_url
 
-    @patch('requests.get')
+    @patch('src.ingestion.sources.citibike._download_month_data')
     @patch('pandas.read_csv')
-    def test_citibike_data_processing(self, mock_read_csv, mock_get):
+    def test_citibike_data_processing(self, mock_read_csv, mock_download):
         """Test that CitiBike data is properly processed."""
         # Mock the ZIP download
         csv_data = b"ride_id,started_at,ended_at\n1,2023-10-01,2023-10-01"
@@ -55,9 +58,7 @@ class TestCitiBikeSource:
             zip_file.writestr("202310-citibike-tripdata.csv", csv_data)
         zip_buffer.seek(0)
 
-        mock_response = Mock()
-        mock_response.content = zip_buffer.getvalue()
-        mock_get.return_value = mock_response
+        mock_download.return_value = zip_buffer.getvalue()
 
         # Mock pandas read_csv to return chunks
         mock_df = pd.DataFrame({
@@ -68,15 +69,16 @@ class TestCitiBikeSource:
         mock_read_csv.return_value = [mock_df]  # Simulate chunked reading
 
         source = citibike_source(2023, [10])
+        trips_resource = source.resources["trips"]
 
         # Get yielded data
-        results = list(source())
+        results = list(trips_resource())
 
         # Should yield chunks of data
         assert len(results) >= 1
 
-    @patch('requests.get')
-    def test_citibike_handles_multiple_months(self, mock_get):
+    @patch('src.ingestion.sources.citibike._download_month_data')
+    def test_citibike_handles_multiple_months(self, mock_download):
         """Test that CitiBike processes multiple months."""
         # Create mock ZIP files
         csv_data = b"ride_id,started_at,ended_at\n1,2023-10-01,2023-10-01"
@@ -85,36 +87,36 @@ class TestCitiBikeSource:
             zip_file.writestr("citibike-tripdata.csv", csv_data)
         zip_buffer.seek(0)
 
-        mock_response = Mock()
-        mock_response.content = zip_buffer.getvalue()
-        mock_get.return_value = mock_response
+        mock_download.return_value = zip_buffer.getvalue()
 
         source = citibike_source(2023, [10, 11, 12])
+        trips_resource = source.resources["trips"]
 
         try:
-            list(source())
+            list(trips_resource())
         except Exception:
             pass
 
-        # Should make one request per month
-        assert mock_get.call_count == 3
+        # Should make one download call per month
+        assert mock_download.call_count == 3
 
-    @patch('requests.get')
-    def test_citibike_error_handling(self, mock_get):
+    @patch('src.ingestion.sources.citibike._download_month_data')
+    def test_citibike_error_handling(self, mock_download):
         """Test that CitiBike handles download errors gracefully."""
         # Simulate download failure
-        mock_get.side_effect = Exception("Network error")
+        mock_download.side_effect = PermanentError("Network error")
 
         source = citibike_source(2023, [10, 11])
+        trips_resource = source.resources["trips"]
 
         # Should not raise exception, but continue processing
-        results = list(source())
+        results = list(trips_resource())
 
         # No data yielded due to errors
         assert len(results) == 0
 
-    @patch('requests.get')
-    def test_citibike_zip_extraction(self, mock_get):
+    @patch('src.ingestion.sources.citibike._download_month_data')
+    def test_citibike_zip_extraction(self, mock_download):
         """Test that ZIP files are properly extracted."""
         # Create a ZIP with a CSV file
         csv_data = b"ride_id,started_at\n1,2023-10-01\n2,2023-10-02"
@@ -123,18 +125,16 @@ class TestCitiBikeSource:
             zip_file.writestr("202310-citibike-tripdata.csv", csv_data)
         zip_buffer.seek(0)
 
-        mock_response = Mock()
-        mock_response.content = zip_buffer.getvalue()
-        mock_get.return_value = mock_response
+        mock_download.return_value = zip_buffer.getvalue()
 
         source = citibike_source(2023, [10])
 
-        # Verify ZIP is extracted and CSV is read
-        # The actual processing is done by pandas in chunks
+        # Verify source was created correctly
         assert source is not None
+        assert "trips" in source.resources
 
-    @patch('requests.get')
-    def test_citibike_chunked_loading(self, mock_get):
+    @patch('src.ingestion.sources.citibike._download_month_data')
+    def test_citibike_chunked_loading(self, mock_download):
         """Test that large CSV files are loaded in chunks."""
         # Create a larger CSV
         csv_data = "ride_id,started_at\n" + "\n".join([f"{i},2023-10-01" for i in range(100000)])
@@ -143,14 +143,13 @@ class TestCitiBikeSource:
             zip_file.writestr("202310-citibike-tripdata.csv", csv_data.encode())
         zip_buffer.seek(0)
 
-        mock_response = Mock()
-        mock_response.content = zip_buffer.getvalue()
-        mock_get.return_value = mock_response
+        mock_download.return_value = zip_buffer.getvalue()
 
         source = citibike_source(2023, [10])
+        trips_resource = source.resources["trips"]
 
         # Consume generator
-        results = list(source())
+        results = list(trips_resource())
 
         # Should yield data in chunks (50000 records per chunk as per source code)
         # With 100k records, we should get at least 2 chunks

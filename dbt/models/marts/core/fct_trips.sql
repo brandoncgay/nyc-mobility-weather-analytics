@@ -23,15 +23,29 @@
     - On subsequent runs: Only process trips with pickup_datetime newer than max in table
     - Uses delete+insert strategy for idempotent behavior
     - Handles late-arriving data by reprocessing based on unique_key
+
+    BACKFILL SUPPORT:
+    To backfill historical months, use one of these options:
+    1. Full refresh: dbt run --full-refresh --select fct_trips
+    2. Date range: dbt run --select fct_trips --vars '{"backfill_start_date": "2025-05-01"}'
+
+    The date range option processes data from backfill_start_date onwards (faster than full refresh).
 #}
 
 with trips_unioned as (
     select * from {{ ref('int_trips__unioned') }}
 
     {% if is_incremental() %}
-    -- Only process new trips (incremental mode)
-    -- This dramatically speeds up daily runs by only processing new data
-    where pickup_datetime > (select max(pickup_datetime) from {{ this }})
+        {# Check if we're doing a targeted backfill with a specific start date #}
+        {% if var('backfill_start_date', None) %}
+            -- Backfill mode: Process data from specified start date onwards
+            -- Usage: dbt run --select fct_trips --vars '{"backfill_start_date": "2025-05-01"}'
+            where pickup_datetime >= '{{ var("backfill_start_date") }}'::timestamp
+        {% else %}
+            -- Normal incremental mode: Only process new trips
+            -- This dramatically speeds up daily runs by only processing new data
+            where pickup_datetime > (select max(pickup_datetime) from {{ this }})
+        {% endif %}
     {% endif %}
 ),
 

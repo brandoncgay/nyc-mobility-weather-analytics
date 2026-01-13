@@ -22,15 +22,26 @@
     - On subsequent runs: Only process hours with trips newer than max hour in table
     - Uses delete+insert strategy for idempotent behavior
     - Recomputes entire hour aggregate if any new trips arrive for that hour
+
+    BACKFILL SUPPORT:
+    To backfill historical months, use one of these options:
+    1. Full refresh: dbt run --full-refresh --select fct_hourly_mobility
+    2. Date range: dbt run --select fct_hourly_mobility --vars '{"backfill_start_date": "2025-05-01"}'
 #}
 
 with trips as (
     select * from {{ ref('fct_trips') }}
 
     {% if is_incremental() %}
-    -- Only process trips from hours not yet in the table (incremental mode)
-    -- This speeds up daily runs by only aggregating new hourly data
-    where date_trunc('hour', pickup_datetime) > (select max(hour_timestamp) from {{ this }})
+        {# Check if we're doing a targeted backfill with a specific start date #}
+        {% if var('backfill_start_date', None) %}
+            -- Backfill mode: Process data from specified start date onwards
+            where date_trunc('hour', pickup_datetime) >= '{{ var("backfill_start_date") }}'::timestamp
+        {% else %}
+            -- Normal incremental mode: Only process trips from hours not yet in the table
+            -- This speeds up daily runs by only aggregating new hourly data
+            where date_trunc('hour', pickup_datetime) > (select max(hour_timestamp) from {{ this }})
+        {% endif %}
     {% endif %}
 ),
 

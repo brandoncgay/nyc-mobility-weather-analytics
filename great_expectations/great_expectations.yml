@@ -15,7 +15,7 @@ datasources:
     class_name: Datasource
     execution_engine:
       class_name: SqlAlchemyExecutionEngine
-      connection_string: duckdb:////Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/data/nyc_mobility.duckdb
+      connection_string: duckdb:///../data/nyc_mobility.duckdb
     data_connectors:
       default_runtime_data_connector:
         class_name: RuntimeDataConnector

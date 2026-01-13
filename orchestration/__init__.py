@@ -25,6 +25,7 @@ from .assets.monthly_ingestion import (
     monthly_ge_validation,
 )
 from .jobs import (
+    backfill_monthly_data,
     dbt_transformation_job,
     dlt_ingestion_job,
     full_pipeline_job,
@@ -55,6 +56,7 @@ defs = Definitions(
         dlt_ingestion_job,
         dbt_transformation_job,
         monthly_ingestion_job,
+        backfill_monthly_data,
     ],
     resources=resources_by_env["dev"],
     schedules=[daily_dbt_schedule],

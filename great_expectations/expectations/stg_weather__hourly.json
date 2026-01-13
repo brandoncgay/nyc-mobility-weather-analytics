@@ -26,7 +26,7 @@
     {
       "expectation_type": "expect_column_values_to_be_between",
       "kwargs": {
-        "column": "temperature_celsius",
+        "column": "temp",
         "max_value": 50,
         "min_value": -30
       },
@@ -35,7 +35,7 @@
     {
       "expectation_type": "expect_column_values_to_be_between",
       "kwargs": {
-        "column": "humidity_pct",
+        "column": "humidity",
         "max_value": 100,
         "min_value": 0
       },

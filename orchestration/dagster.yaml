@@ -1,10 +1,5 @@
 # Dagster instance configuration for NYC Mobility & Weather Analytics
 
-# Storage configuration - using local filesystem
-storage:
-  sqlite:
-    base_dir: "{{ env_var('DAGSTER_HOME', '/Users/brandoncgay/Documents/Projects/nyc-mobility-weather-analytics/data/dagster_storage') }}"
-
 # Run launcher - local process
 run_launcher:
   module: dagster.core.launcher

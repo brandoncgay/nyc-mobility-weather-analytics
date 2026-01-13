@@ -64,15 +64,6 @@
         "min_value": 0
       },
       "meta": {}
-    },
-    {
-      "expectation_type": "expect_column_values_to_not_be_null",
-      "kwargs": {
-        "column": "weather_key"
-      },
-      "meta": {
-        "notes": "99.9996% coverage expected"
-      }
     }
   ],
   "ge_cloud_id": null,

@@ -11,141 +11,136 @@ class TestTaxiSource:
     """Tests for taxi_source DLT source."""
 
     def test_taxi_source_returns_resources(self):
-        """Test that taxi_source returns the correct resources."""
+        """Test that taxi_source returns a DLT source."""
         source = taxi_source(2023, [10], ["yellow", "fhv"])
 
-        # DLT sources return resources
+        # DLT sources return a DltSource object
         assert source is not None
-        assert len(source) == 2  # Should return both yellow and fhv resources
+        assert hasattr(source, 'resources')
+        # Verify we have 2 resources (yellow and fhv)
+        resource_names = [r.name for r in source.resources.values()]
+        assert "yellow_taxi" in resource_names
+        assert "fhv_taxi" in resource_names
 
     def test_taxi_source_yellow_only(self):
         """Test taxi_source with only yellow taxi type."""
         source = taxi_source(2023, [10], ["yellow"])
 
         assert source is not None
-        assert len(source) == 1
+        resource_names = [r.name for r in source.resources.values()]
+        assert "yellow_taxi" in resource_names
+        assert "fhv_taxi" not in resource_names
 
     def test_taxi_source_fhv_only(self):
         """Test taxi_source with only FHV taxi type."""
         source = taxi_source(2023, [10], ["fhv"])
 
         assert source is not None
-        assert len(source) == 1
+        resource_names = [r.name for r in source.resources.values()]
+        assert "fhv_taxi" in resource_names
+        assert "yellow_taxi" not in resource_names
 
-    @patch('pyarrow.parquet.read_table')
-    def test_yellow_taxi_url_format(self, mock_read_table):
+    @patch('src.ingestion.sources.taxi._download_month_data')
+    def test_yellow_taxi_url_format(self, mock_download):
         """Test that yellow taxi constructs correct URLs."""
-        # Mock the parquet read to prevent actual downloads
-        mock_table = Mock()
-        mock_table.to_pylist.return_value = [{"id": 1, "fare": 10.5}]
-        mock_read_table.return_value = mock_table
+        # Mock the download function
+        mock_download.return_value = [{"id": 1, "fare": 10.5}]
 
         source = taxi_source(2023, [10, 11], ["yellow"])
 
-        # Get the yellow_taxi resource
-        yellow_resource = source[0]
+        # Get the yellow_taxi resource and consume it
+        yellow_resource = source.resources["yellow_taxi"]
+        results = list(yellow_resource())
 
-        # Consume the generator to trigger URL construction
-        try:
-            list(yellow_resource())
-        except Exception:
-            pass  # We expect this might fail in test environment
+        # Verify download was called with correct parameters
+        assert mock_download.call_count == 2
+        # Check that URLs were constructed correctly
+        calls = mock_download.call_args_list
+        assert calls[0][0][0] == "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-10.parquet"
+        assert calls[1][0][0] == "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-11.parquet"
 
-        # Verify read_table was called with correct URLs
-        expected_calls = [
-            "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-10.parquet",
-            "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-11.parquet"
-        ]
-
-        assert mock_read_table.call_count >= 1
-
-    @patch('pyarrow.parquet.read_table')
-    def test_fhv_taxi_url_format(self, mock_read_table):
+    @patch('src.ingestion.sources.taxi._download_month_data')
+    def test_fhv_taxi_url_format(self, mock_download):
         """Test that FHV taxi constructs correct URLs."""
-        # Mock the parquet read
-        mock_table = Mock()
-        mock_table.to_pylist.return_value = [{"id": 1}]
-        mock_read_table.return_value = mock_table
+        mock_download.return_value = [{"id": 1}]
 
         source = taxi_source(2023, [10], ["fhv"])
 
-        # Get the fhv_taxi resource
-        fhv_resource = source[0]
+        # Get the fhv_taxi resource and consume it
+        fhv_resource = source.resources["fhv_taxi"]
+        results = list(fhv_resource())
 
-        # Consume the generator
-        try:
-            list(fhv_resource())
-        except Exception:
-            pass
+        # Verify download was called
+        assert mock_download.call_count == 1
+        calls = mock_download.call_args_list
+        assert calls[0][0][0] == "https://d37ci6vzurychx.cloudfront.net/trip-data/fhv_tripdata_2023-10.parquet"
 
-        assert mock_read_table.call_count >= 1
-
-    @patch('pyarrow.parquet.read_table')
-    def test_yellow_taxi_data_conversion(self, mock_read_table):
+    @patch('src.ingestion.sources.taxi._download_month_data')
+    def test_yellow_taxi_data_conversion(self, mock_download):
         """Test that yellow taxi data is properly converted to Python dicts."""
-        # Create a mock table with sample data
+        # Create sample data
         mock_data = [
             {"tpep_pickup_datetime": "2023-10-01", "fare_amount": 10.5},
             {"tpep_pickup_datetime": "2023-10-02", "fare_amount": 15.0}
         ]
-
-        mock_table = Mock()
-        mock_table.to_pylist.return_value = mock_data
-        mock_read_table.return_value = mock_table
+        mock_download.return_value = mock_data
 
         source = taxi_source(2023, [10], ["yellow"])
-        yellow_resource = source[0]
+        yellow_resource = source.resources["yellow_taxi"]
 
         # Get the yielded data
         results = list(yellow_resource())
 
-        # Verify data was yielded correctly
-        assert len(results) == 1  # One batch per month
-        assert results[0] == mock_data
+        # Verify data was yielded - DLT may yield as batch or individual records
+        # Just verify we got the data from _download_month_data
+        assert len(results) >= 1
+        assert mock_download.called
+        # Flatten results if needed and check data is present
+        flat_results = results[0] if len(results) == 1 and isinstance(results[0], list) else results
+        assert len(flat_results) == 2
+        assert flat_results[0]["tpep_pickup_datetime"] == "2023-10-01"
+        assert flat_results[1]["tpep_pickup_datetime"] == "2023-10-02"
 
-    @patch('pyarrow.parquet.read_table')
-    def test_taxi_source_handles_multiple_months(self, mock_read_table):
+    @patch('src.ingestion.sources.taxi._download_month_data')
+    def test_taxi_source_handles_multiple_months(self, mock_download):
         """Test that taxi source processes multiple months."""
-        mock_table = Mock()
-        mock_table.to_pylist.return_value = [{"id": 1}]
-        mock_read_table.return_value = mock_table
+        mock_download.return_value = [{"id": 1}]
 
         source = taxi_source(2023, [10, 11, 12], ["yellow"])
-        yellow_resource = source[0]
+        yellow_resource = source.resources["yellow_taxi"]
 
         results = list(yellow_resource())
 
         # Should yield one batch per month
         assert len(results) == 3
-        assert mock_read_table.call_count == 3
+        assert mock_download.call_count == 3
 
-    @patch('pyarrow.parquet.read_table')
-    def test_taxi_source_error_handling(self, mock_read_table):
+    @patch('src.ingestion.sources.taxi._download_month_data')
+    def test_taxi_source_error_handling(self, mock_download):
         """Test that taxi source handles errors gracefully."""
-        # Simulate an error on the first call, success on second
-        mock_table = Mock()
-        mock_table.to_pylist.return_value = [{"id": 1}]
-
-        mock_read_table.side_effect = [
-            Exception("Download failed"),  # First month fails
-            mock_table  # Second month succeeds
+        # Simulate permanent error on first call, success on second
+        mock_download.side_effect = [
+            PermanentError("Data not found"),  # First month fails
+            [{"id": 1}]  # Second month succeeds
         ]
 
         source = taxi_source(2023, [10, 11], ["yellow"])
-        yellow_resource = source[0]
+        yellow_resource = source.resources["yellow_taxi"]
 
         # Should continue processing despite error
         results = list(yellow_resource())
 
         # Should only get one result (from successful month)
         assert len(results) == 1
+        assert mock_download.call_count == 2
 
     def test_taxi_source_empty_types_list(self):
         """Test taxi source with empty taxi types list."""
         source = taxi_source(2023, [10], [])
 
-        # Should return empty list when no types specified
-        assert len(source) == 0
+        # Should return source with no resources
+        assert source is not None
+        assert len(source.resources) == 0
 
     def test_taxi_source_invalid_month_format(self):
         """Test that URL format handles single-digit months correctly."""

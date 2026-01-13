@@ -31,9 +31,11 @@ dbt_transformation_job = define_asset_job(
 )
 
 # Monthly ingestion job: Load one month at a time with validation
+# ⚠️ Use this for loading NEW months (months > current max date)
+# For historical backfills, use backfill_monthly_data instead
 monthly_ingestion_job = define_asset_job(
     name="monthly_ingestion",
-    description="Load data for one month: DLT ingestion → dbt transformation → validation",
+    description="Load data for one month: DLT ingestion → dbt transformation (incremental) → validation. Use for forward-loading only.",
     selection=AssetSelection.groups("monthly_ingestion"),
     config={
         "ops": {
@@ -42,6 +44,58 @@ monthly_ingestion_job = define_asset_job(
                     "year": 2025,
                     "month": 10,
                     "sources": "taxi,citibike,weather",
+                }
+            },
+            "monthly_dbt_transformation": {
+                "config": {
+                    "full_refresh": False,  # Incremental mode
+                }
+            }
+        }
+    },
+)
+
+# Backfill job: Load historical data with full refresh
+# Use this when loading months EARLIER than your current data range
+backfill_monthly_data = define_asset_job(
+    name="backfill_monthly_data",
+    description="""
+    Backfill historical data for a specific month.
+
+    ⚠️ IMPORTANT: Use this job when loading months EARLIER than your current max date.
+
+    This job:
+    1. Runs DLT ingestion for the specified month (idempotent - safe to rerun)
+    2. Runs dbt with --full-refresh for fact tables (rebuilds entire table)
+    3. Validates data loaded correctly
+
+    Why full refresh is needed:
+    - fct_trips incremental filter: WHERE pickup_datetime > max(pickup_datetime)
+    - Only processes data NEWER than current max date
+    - Historical months would be filtered out without full refresh
+
+    Example usage:
+    To backfill May 2025 when you already have June-November:
+
+    dagster job launch backfill_monthly_data \\
+      --config '{"ops": {"monthly_dlt_ingestion": {"config": {"year": 2025, "month": 5}}}}'
+
+    Performance note:
+    Full refresh processes all trips (~32M rows). Takes ~30 seconds in DuckDB.
+    """,
+    selection=AssetSelection.groups("monthly_ingestion"),
+    config={
+        "ops": {
+            "monthly_dlt_ingestion": {
+                "config": {
+                    "year": 2025,
+                    "month": 5,  # Example: backfill May
+                    "sources": "taxi,citibike,weather",
+                }
+            },
+            "monthly_dbt_transformation": {
+                "config": {
+                    "full_refresh": True,  # Required for backfills
                 }
             }
         }

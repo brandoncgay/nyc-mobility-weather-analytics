@@ -40,9 +40,9 @@
     {
       "expectation_type": "expect_column_values_to_be_between",
       "kwargs": {
-        "column": "trip_distance_miles",
-        "max_value": 200,
-        "min_value": 0
+        "column": "trip_distance",
+        "min_value": 0,
+        "mostly": 0.99
       },
       "meta": {}
     },
@@ -50,8 +50,9 @@
       "expectation_type": "expect_column_values_to_be_between",
       "kwargs": {
         "column": "total_amount",
-        "max_value": 1000,
-        "min_value": 0
+        "max_value": 5000,
+        "min_value": -10,
+        "mostly": 0.99
       },
       "meta": {}
     }

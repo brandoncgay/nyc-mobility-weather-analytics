@@ -146,6 +146,179 @@ cd dbt && poetry run dbt parse
 
 Then restart Dagster to pick up the changes.
 
+## Backfilling Historical Data
+
+⚠️ **Critical**: The incremental strategy in `fct_trips` and `fct_hourly_mobility` only processes data NEWER than the maximum date already in the table. To backfill historical months, you must use one of the methods below.
+
+### Understanding the Problem
+
+```sql
+-- Current incremental filter in fct_trips.sql
+WHERE pickup_datetime > (SELECT MAX(pickup_datetime) FROM fct_trips)
+
+-- If your current data: June-November 2025 (max date: 2025-11-30)
+-- And you try to load: May 2025
+-- Result: May data is EXCLUDED (May < November) ❌
+```
+
+### Method 1: Using the Backfill Job (Recommended)
+
+The `backfill_monthly_data` job automatically handles full refresh for you:
+
+```bash
+# Backfill a single month (e.g., May 2025)
+poetry run dagster job launch backfill_monthly_data \
+  --config '{
+    "ops": {
+      "monthly_dlt_ingestion": {
+        "config": {
+          "year": 2025,
+          "month": 5,
+          "sources": "taxi,citibike,weather"
+        }
+      }
+    }
+  }'
+```
+
+This job:
+1. Ingests May data via DLT (idempotent - safe to rerun)
+2. Runs dbt with `--full-refresh` to rebuild fact tables (~30 seconds)
+3. Validates that data loaded correctly
+
+### Method 2: Manual Backfill with Full Refresh
+
+```bash
+# Step 1: Ingest the historical month
+poetry run python src/ingestion/run_pipeline.py \
+  --year 2025 \
+  --months 5 \
+  --sources taxi,citibike,weather
+
+# Step 2: Full refresh fact tables to reprocess all data
+cd dbt && poetry run dbt run \
+  --full-refresh \
+  --select fct_trips fct_hourly_mobility
+```
+
+**Why this works:**
+- `--full-refresh` ignores incremental logic and rebuilds entire table
+- Processes ALL data from source (not just new data)
+- Takes ~30 seconds for 32M trips in DuckDB
+
+### Method 3: Targeted Backfill with Date Range (Faster)
+
+If you want to avoid full refresh for large datasets:
+
+```bash
+# Step 1: Ingest the historical month
+poetry run python src/ingestion/run_pipeline.py \
+  --year 2025 \
+  --months 5 \
+  --sources taxi,citibike,weather
+
+# Step 2: Use date range variable for targeted backfill
+cd dbt && poetry run dbt run \
+  --select fct_trips fct_hourly_mobility \
+  --vars '{"backfill_start_date": "2025-05-01"}'
+```
+
+**Why this is faster:**
+- Only processes data from May onwards (not entire history)
+- Still slower than normal incremental, but faster than full refresh
+- Useful for large datasets where full refresh takes too long
+
+### Method 4: Forward-Loading (No Special Action Needed)
+
+If you're loading months AFTER your current max date, use the regular job:
+
+```bash
+# Load December 2025 (after current max date of November 2025)
+poetry run dagster job launch monthly_ingestion \
+  --config '{
+    "ops": {
+      "monthly_dlt_ingestion": {
+        "config": {
+          "year": 2025,
+          "month": 12
+        }
+      }
+    }
+  }'
+```
+
+**This works normally** because December > November (no special handling needed).
+
+### Backfill Multiple Months
+
+To backfill several historical months (e.g., Jan-May 2025):
+
+```bash
+# Option A: Backfill all at once
+poetry run python src/ingestion/run_pipeline.py \
+  --year 2025 \
+  --months 1,2,3,4,5 \
+  --sources taxi,citibike,weather
+
+cd dbt && poetry run dbt run --full-refresh --select fct_trips fct_hourly_mobility
+
+# Option B: Backfill one month at a time (safer, easier to monitor)
+for month in 1 2 3 4 5; do
+  echo "Backfilling month $month..."
+  poetry run dagster job launch backfill_monthly_data \
+    --config "{\"ops\": {\"monthly_dlt_ingestion\": {\"config\": {\"year\": 2025, \"month\": $month}}}}"
+  sleep 60  # Wait for previous job to complete
+done
+```
+
+### Verifying Backfill Success
+
+After backfilling, verify the data loaded:
+
+```bash
+# Check trip counts by month
+poetry run python -c "
+import duckdb
+conn = duckdb.connect('data/nyc_mobility.duckdb', read_only=True)
+result = conn.execute('''
+  SELECT
+    DATE_TRUNC('month', pickup_datetime) as month,
+    COUNT(*) as trips
+  FROM core_core.fct_trips
+  GROUP BY DATE_TRUNC('month', pickup_datetime)
+  ORDER BY month
+''').fetchdf()
+print(result)
+"
+```
+
+Expected output should show trips for the backfilled months.
+
+### Performance Notes
+
+| Method | Time (32M trips) | When to Use |
+|--------|------------------|-------------|
+| Full Refresh | ~30 seconds | Backfilling any historical month |
+| Date Range | ~10-15 seconds | Backfilling recent months (within 3 months) |
+| Normal Incremental | ~3-5 seconds | Loading new months (forward-loading) |
+
+Times are for DuckDB. Snowflake/BigQuery will be slower but relative speedup is similar.
+
+### Common Errors
+
+**Error: "No trips found for YYYY-MM"**
+```
+❌ No trips found for 2025-05 in fct_trips!
+
+This usually means:
+1. You are backfilling a historical month (month < current max date)
+2. The incremental filter excluded the data
+
+Solution: Re-run with full_refresh=True or use the backfill_monthly_data job.
+```
+
+**Solution:** Use the backfill job or add `--full-refresh` flag.
+
 ## Next Steps
 
 - **Phase 9**: Add Great Expectations for data quality checks

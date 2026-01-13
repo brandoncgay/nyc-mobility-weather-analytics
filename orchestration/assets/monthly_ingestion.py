@@ -25,6 +25,12 @@ class MonthlyIngestionConfig(Config):
     sources: str = "taxi,citibike,weather"
 
 
+class MonthlyTransformationConfig(Config):
+    """Configuration for monthly dbt transformation."""
+
+    full_refresh: bool = False  # Set to True for backfilling historical months
+
+
 @asset(
     name="monthly_dlt_ingestion",
     description="Ingest data for a specific month via DLT (incremental/idempotent)",
@@ -113,21 +119,29 @@ def monthly_dlt_ingestion(
 
 @asset(
     name="monthly_dbt_transformation",
-    description="Run dbt incremental transformations after monthly ingestion",
+    description="Run dbt transformations after monthly ingestion (supports full refresh for backfills)",
     group_name="monthly_ingestion",
     compute_kind="dbt",
 )
 def monthly_dbt_transformation(
     context: AssetExecutionContext,
+    config: MonthlyTransformationConfig,
     monthly_dlt_ingestion: dict,
 ) -> Output[dict]:
     """
-    Run dbt transformations incrementally after data ingestion.
+    Run dbt transformations after data ingestion.
+
+    ⚠️ BACKFILL WARNING:
+    The incremental filter in fct_trips only processes data NEWER than the max date.
+    To backfill historical months (months earlier than current data), set full_refresh=True.
 
     This asset:
-    - Runs dbt build (incremental - only processes new data)
-    - Executes all models, tests, and snapshots
+    - Runs dbt run (incremental by default, or full refresh if configured)
+    - Executes models (fact tables: fct_trips, fct_hourly_mobility)
     - Depends on monthly_dlt_ingestion completing first
+
+    Config:
+        full_refresh: Set to True when backfilling historical months (default: False)
 
     Returns:
         dict: dbt run metadata including test results
@@ -135,21 +149,35 @@ def monthly_dbt_transformation(
     year = monthly_dlt_ingestion["year"]
     month = monthly_dlt_ingestion["month"]
 
-    context.log.info(
-        f"Starting dbt transformation for {year}-{month:02d} data "
-        "(incremental mode)"
-    )
+    if config.full_refresh:
+        context.log.warning(
+            f"⚠️ Running with --full-refresh for {year}-{month:02d}. "
+            "This will rebuild entire fact tables (slower but necessary for backfills)."
+        )
+    else:
+        context.log.info(
+            f"Starting dbt transformation for {year}-{month:02d} data "
+            "(incremental mode - only processes new data)"
+        )
 
     dbt_dir = PROJECT_ROOT / "dbt"
 
+    # Build dbt command
+    dbt_cmd = ["poetry", "run", "dbt", "run", "--select", "fct_trips", "fct_hourly_mobility"]
+
+    # Add full-refresh flag if configured (needed for backfills)
+    if config.full_refresh:
+        dbt_cmd.append("--full-refresh")
+        context.log.info("Using --full-refresh to handle historical data backfill")
+
+    context.log.info(f"Running command: {' '.join(dbt_cmd)}")
+
     # Run dbt run (models only, skip tests)
-    # This will be incremental for fact tables, fast!
     # Tests are skipped because:
     # - We have data validation in monthly_data_validation asset
-    # - Some tests have known failures (weather coverage, dim_date range)
     # - We want monthly loads to complete successfully
     result = subprocess.run(
-        ["poetry", "run", "dbt", "run"],
+        dbt_cmd,
         cwd=dbt_dir,
         capture_output=True,
         text=True,
@@ -248,8 +276,21 @@ def monthly_data_validation(
     }
 
     if total_trips == 0:
-        context.log.warning(f"⚠️ No trips found for {year}-{month:02d}")
-        metadata["status"] = "warning_no_data"
+        context.log.error(
+            f"❌ No trips found for {year}-{month:02d} in fct_trips!\n"
+            f"\n"
+            f"This usually means:\n"
+            f"1. You are backfilling a historical month (month < current max date)\n"
+            f"2. The incremental filter excluded the data\n"
+            f"\n"
+            f"Solution: Re-run with full_refresh=True or use the backfill_monthly_data job.\n"
+            f"Example:\n"
+            f"  dagster job launch backfill_monthly_data \\\n"
+            f"    --config '{{\"ops\": {{\"monthly_dlt_ingestion\": {{\"config\": {{\"year\": {year}, \"month\": {month}}}}}, "
+            f"\"monthly_dbt_transformation\": {{\"config\": {{\"full_refresh\": true}}}}}}}}'"
+        )
+        metadata["status"] = "error_no_data"
+        metadata["warning"] = "Backfill failed - use full_refresh=True"
     else:
         context.log.info(f"✓ Validation successful: {total_trips:,} trips loaded")
 
