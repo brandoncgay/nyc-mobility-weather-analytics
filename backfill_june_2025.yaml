@@ -1,0 +1,8 @@
+ops:
+  monthly_dlt_ingestion:
+    config:
+      year: 2025
+      month: 6
+  monthly_dbt_transformation:
+    config:
+      full_refresh: true

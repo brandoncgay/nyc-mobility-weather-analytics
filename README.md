@@ -356,14 +356,17 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ### For Analysts
 - 50 pre-defined metrics via MetricFlow CLI
-- Interactive Streamlit dashboard
-- SQL access to 12.4M enriched trips
+- Interactive Streamlit analytics dashboard
+- Data completeness monitoring dashboard (NEW!)
+- SQL access to 32.5M enriched trips
 - Weather impact analysis
 - Mode comparison (taxi/FHV/bike)
 
 ### For Engineers
 - Full lineage tracking in Dagster
-- 106 automated tests (dbt + Great Expectations)
+- 109 automated tests (dbt + Great Expectations)
+- Backfill support with 4 methods
+- Data quality monitoring dashboard
 - Medallion architecture (Bronze/Silver/Gold)
 - Kimball star schema
 - Dynamic date dimension (auto-adjusts to data)

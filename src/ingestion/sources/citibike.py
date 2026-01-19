@@ -88,7 +88,7 @@ def citibike_source(year: int, months: list[int]):
 
     @dlt.resource(
         name="trips",
-        write_disposition="merge",
+        write_disposition="merge",  # Merge mode with primary key for incremental loads
         primary_key="ride_id"
     )
     def trips() -> Iterator:
@@ -110,28 +110,31 @@ def citibike_source(year: int, months: list[int]):
 
                 # Extract and process CSV from ZIP
                 with ZipFile(BytesIO(zip_content)) as zip_file:
-                    # Get the first (and usually only) file in the ZIP
-                    csv_filename = zip_file.namelist()[0]
-                    logger.info(f"Extracting {csv_filename} from ZIP")
+                    # Process ALL CSV files in the ZIP (CitiBike sometimes splits data into multiple files)
+                    csv_files = [f for f in zip_file.namelist() if f.endswith('.csv')]
+                    logger.info(f"Found {len(csv_files)} CSV file(s) in ZIP: {csv_files}")
 
-                    with zip_file.open(csv_filename) as csv_file:
-                        # Read CSV in chunks for memory efficiency
-                        chunk_size = 50000
-                        chunk_num = 0
+                    for csv_filename in csv_files:
+                        logger.info(f"Extracting {csv_filename} from ZIP")
 
-                        for chunk in pd.read_csv(csv_file, chunksize=chunk_size):
-                            chunk_num += 1
+                        with zip_file.open(csv_filename) as csv_file:
+                            # Read CSV in chunks for memory efficiency
+                            chunk_size = 50000
+                            chunk_num = 0
 
-                            # Convert DataFrame to list of dictionaries
-                            records = chunk.to_dict(orient="records")
+                            for chunk in pd.read_csv(csv_file, chunksize=chunk_size):
+                                chunk_num += 1
 
-                            logger.info(
-                                f"Loaded chunk {chunk_num} with {len(records):,} CitiBike records "
-                                f"for {year}-{month:02d}"
-                            )
+                                # Convert DataFrame to list of dictionaries
+                                records = chunk.to_dict(orient="records")
 
-                            # Yield chunk
-                            yield records
+                                logger.info(
+                                    f"Loaded chunk {chunk_num} with {len(records):,} CitiBike records "
+                                    f"from {csv_filename} for {year}-{month:02d}"
+                                )
+
+                                # Yield chunk
+                                yield records
 
                 logger.info(f"Completed loading CitiBike data for {year}-{month:02d}")
 

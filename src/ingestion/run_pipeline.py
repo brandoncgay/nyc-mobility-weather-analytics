@@ -136,7 +136,7 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Ingest all sources for Q4 2023
+  # Ingest all sources for Q4 2025
   python src/ingestion/run_pipeline.py
 
   # Ingest only taxi data
@@ -153,8 +153,8 @@ Examples:
     parser.add_argument(
         "--year",
         type=int,
-        default=2023,
-        help="Year to ingest data for (default: 2023)",
+        default=2025,
+        help="Year to ingest data for (default: 2025)",
     )
 
     parser.add_argument(
