@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv/
+
+# Project Data (Do not include local data in image!)
+data/
+*.duckdb
+*.parquet
+*.csv
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dagster
+dagster_home/

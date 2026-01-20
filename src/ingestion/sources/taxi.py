@@ -31,8 +31,11 @@ def _download_month_data(url: str, year: int, month: int, taxi_type: str) -> lis
         PermanentError: Non-retryable failures (auth, not found, data issues)
     """
     try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
         logger.debug(f"Fetching {taxi_type} taxi data: {url}")
-        response = requests.get(url, timeout=120)
+        response = requests.get(url, timeout=120, headers=headers)
 
         # Check HTTP status codes
         if response.status_code == 404:

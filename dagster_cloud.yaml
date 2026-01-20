@@ -1,0 +1,7 @@
+locations:
+  - location_name: nyc_mobility_analytics
+    code_source:
+      package_name: orchestration
+    build:
+      directory: .
+      registry: docker.io/brandoncgay/nyc-mobility-analytics
