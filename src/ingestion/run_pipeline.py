@@ -5,7 +5,7 @@ import sys
 from typing import List
 
 import dlt
-from dlt.destinations import duckdb
+from dlt.destinations import duckdb, filesystem
 
 from src.ingestion.sources.citibike import citibike_source
 from src.ingestion.sources.taxi import taxi_source
@@ -47,11 +47,23 @@ def run_ingestion_pipeline(
     logger.info("=" * 80)
 
     # Initialize DLT pipeline with DuckDB destination
+    # Initialize DLT pipeline with DuckDB destination
+    destination = duckdb(credentials=config.duckdb_path)
+    staging = None
+
+    if config.gcs_bucket_name:
+        logger.info(f"Using GCS staging bucket: {config.gcs_bucket_name}")
+        staging = dlt.destinations.filesystem(
+            bucket_url=f"gs://{config.gcs_bucket_name}",
+            credentials=dlt.secrets.value
+        )
+    
     pipeline = dlt.pipeline(
         pipeline_name="nyc_mobility",
-        destination=duckdb(credentials=config.duckdb_path),
+        destination=destination,
+        staging=staging,
         dataset_name="raw_data",
-        progress="log",  # Show progress
+        progress="log",
     )
 
     logger.info(f"Pipeline initialized: {pipeline.pipeline_name}")

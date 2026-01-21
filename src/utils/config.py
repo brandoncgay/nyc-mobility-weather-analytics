@@ -86,6 +86,11 @@ class Config:
         """Get CitiBike data base URL."""
         return self.get("CITIBIKE_BASE_URL", "https://s3.amazonaws.com/tripdata")
 
+    @property
+    def gcs_bucket_name(self) -> str | None:
+        """Get GCS bucket name for staging."""
+        return self.get("GCS_BUCKET_NAME")
+
 
 
 # Global config instance

@@ -48,6 +48,9 @@ models:
       +schema: core
       core:
         +tags: ["silver", "marts", "core"]
+  
+  elementary:
+    +schema: "elementary"
 
 # Seed configurations
 seeds:

@@ -40,8 +40,17 @@ sources:
 
 # Database configuration
 database:
+  type: "motherduck" # or "local"
+  # Local path
   path: "data/nyc_mobility.duckdb"
+  # MotherDuck database name
+  md_database: "nyc_mobility"
   schema: "raw_data"
+
+# Staging configuration (GCS)
+staging:
+  enabled: true
+  bucket_url: "gs://nyc-mobility-staging" # Will be overwritten by env var GCS_BUCKET_NAME if set
 
 # Ingestion behavior
 settings:

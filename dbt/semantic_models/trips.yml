@@ -1,0 +1,41 @@
+semantic_model:
+  name: trips
+  description: >
+    Unified trip data from Yellow Taxi, FHV, and CitiBike.
+  model: ref('fct_trips')
+  defaults:
+    agg_time_dimension: pickup_datetime
+
+  dimensions:
+    - name: pickup_datetime
+      type: time
+      type_params:
+        time_granularity: hour
+    
+    - name: trip_type
+      type: categorical
+    
+    - name: is_weekend
+      type: categorical
+
+  measures:
+    - name: trip_count
+      expr: 1
+      agg: sum
+    
+    - name: total_revenue
+      expr: revenue
+      agg: sum
+    
+    - name: total_distance
+      expr: trip_distance
+      agg: sum
+      
+    - name: total_duration_minutes
+      expr: trip_duration_minutes
+      agg: sum
+
+  entities:
+    - name: trip
+      type: primary
+      expr: trip_id

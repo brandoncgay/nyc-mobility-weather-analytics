@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: elementary
+    database: nyc_mobility
+    schema: elementary_test_results
+    tables:
+      - name: elementary_test_results
+      - name: dbt_run_results

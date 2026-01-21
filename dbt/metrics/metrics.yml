@@ -1,0 +1,23 @@
+metrics:
+  - name: total_trips
+    label: Total Trips
+    description: Count of all trips across all modes
+    type: simple
+    type_params:
+      measure: trip_count
+
+  - name: avg_fare
+    label: Average Fare
+    description: Average revenue per trip
+    type: ratio
+    type_params:
+      numerator: total_revenue
+      denominator: trip_count
+
+  - name: avg_duration
+    label: Average Duration (min)
+    description: Average trip duration in minutes
+    type: ratio
+    type_params:
+      numerator: total_duration_minutes
+      denominator: trip_count

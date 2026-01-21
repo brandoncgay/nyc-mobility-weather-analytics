@@ -18,6 +18,7 @@ from .assets.dlt_assets import (
     dlt_weather_raw,
     dlt_yellow_taxi_raw,
 )
+from .assets.documentation_assets import upload_documentation
 from .assets.monthly_ingestion import (
     monthly_data_validation,
     monthly_dbt_transformation,
@@ -45,6 +46,7 @@ defs = Definitions(
         dlt_ingestion_complete,
         # dbt transformation assets (depend on ingestion)
         dbt_analytics_assets,
+        upload_documentation,
         # Monthly ingestion workflow assets
         monthly_dlt_ingestion,
         monthly_dbt_transformation,

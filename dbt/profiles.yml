@@ -13,7 +13,7 @@ nyc_mobility:
 
     prod:
       type: duckdb
-      path: "md:nyc_mobility"
+      path: "md:nyc_mobility?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
       schema: core
       threads: 4
       extensions:
