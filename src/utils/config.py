@@ -59,8 +59,19 @@ class Config:
         return self.get("LOG_LEVEL", "INFO")
 
     @property
+    def motherduck_token(self) -> str | None:
+        """Get MotherDuck token."""
+        return self.get("MOTHERDUCK_TOKEN")
+
+    @property
     def duckdb_path(self) -> str:
-        """Get DuckDB database path."""
+        """Get DuckDB database path.
+
+        Returns:
+            MotherDuck connection string if token is present, else local file path.
+        """
+        if self.motherduck_token:
+            return "md:nyc_mobility"
         return self.get("DUCKDB_PATH", "./data/nyc_mobility.duckdb")
 
     @property

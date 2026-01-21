@@ -30,6 +30,10 @@ DB_PATH = Path(__file__).parent / "data" / "nyc_mobility.duckdb"
 @st.cache_resource
 def get_connection():
     """Create a read-only DuckDB connection."""
+    import os
+    token = os.getenv("MOTHERDUCK_TOKEN")
+    if token:
+        return duckdb.connect("md:nyc_mobility", read_only=True)
     return duckdb.connect(str(DB_PATH), read_only=True)
 
 

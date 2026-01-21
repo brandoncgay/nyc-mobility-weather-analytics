@@ -10,3 +10,11 @@ nyc_mobility:
         - parquet
       settings:
         memory_limit: '8GB'
+
+    prod:
+      type: duckdb
+      path: "md:nyc_mobility"
+      schema: core
+      threads: 4
+      extensions:
+        - parquet

@@ -1,0 +1,44 @@
+name: CI - Code Quality & Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Lint Python (Ruff)
+        run: poetry run ruff check .
+
+      # - name: Lint SQL (SQLFluff)
+        # run: poetry run sqlfluff lint dbt/models --dialect duckdb
+
+      - name: Run Unit Tests
+        run: poetry run pytest
+
+      - name: Verify dbt Project (Parse)
+        env:
+          DBT_PROFILES_DIR: ./dbt
+        run: poetry run dbt parse --project-dir ./dbt
+
+      # - name: Validate Dagster Configuration
+        # run: poetry run dagster project validate-configuration -f dagster_cloud.yaml
