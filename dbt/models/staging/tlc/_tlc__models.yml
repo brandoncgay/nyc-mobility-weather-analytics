@@ -24,9 +24,19 @@ models:
 
       - name: passenger_count
         description: "Number of passengers"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 10
+              severity: warn # Just warn for now, data might be messy
 
       - name: trip_distance
         description: "Trip distance in miles"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1000 # Trips > 1000 miles are likely errors
+              severity: warn
 
       - name: pickup_location_id
         description: "TLC zone ID for pickup location"

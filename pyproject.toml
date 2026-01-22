@@ -28,7 +28,7 @@ dbt-duckdb = "^1.7.0"
 dagster = "*"
 dagster-dbt = "*"
 dagster-webserver = "*"
-great-expectations = "^0.18.0"
+
 duckdb-engine = "^0.17.0"
 streamlit = "^1.52.2"
 plotly = "^6.5.1"

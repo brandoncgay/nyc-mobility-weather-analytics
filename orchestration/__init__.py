@@ -23,7 +23,6 @@ from .assets.monthly_ingestion import (
     monthly_data_validation,
     monthly_dbt_transformation,
     monthly_dlt_ingestion,
-    monthly_ge_validation,
 )
 from .jobs import (
     backfill_monthly_data,
@@ -48,10 +47,8 @@ defs = Definitions(
         dbt_analytics_assets,
         upload_documentation,
         # Monthly ingestion workflow assets
-        monthly_dlt_ingestion,
         monthly_dbt_transformation,
         monthly_data_validation,
-        monthly_ge_validation,
     ],
     jobs=[
         full_pipeline_job,
