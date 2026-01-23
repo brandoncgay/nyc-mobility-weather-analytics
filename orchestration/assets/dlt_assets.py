@@ -39,7 +39,7 @@ def dlt_yellow_taxi_raw(context: AssetExecutionContext) -> Output[dict]:
     # Run DLT pipeline for taxi data only
     result = subprocess.run(
         [
-            "poetry", "run", "python",
+            "uv", "run", "python",
             str(INGESTION_SCRIPT),
             "--sources", "taxi",
         ],
@@ -86,7 +86,7 @@ def dlt_citibike_raw(context: AssetExecutionContext) -> Output[dict]:
 
     result = subprocess.run(
         [
-            "poetry", "run", "python",
+            "uv", "run", "python",
             str(INGESTION_SCRIPT),
             "--sources", "citibike",
         ],
@@ -131,7 +131,7 @@ def dlt_weather_raw(context: AssetExecutionContext) -> Output[dict]:
 
     result = subprocess.run(
         [
-            "poetry", "run", "python",
+            "uv", "run", "python",
             str(INGESTION_SCRIPT),
             "--sources", "weather",
         ],

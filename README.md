@@ -10,7 +10,7 @@ Analyze how weather affects NYC transportation patterns across 14M+ trips from Y
 
 ### Prerequisites
 - Python 3.11+
-- Poetry
+- [uv](https://docs.astral.sh/uv/) (fast Python package manager)
 - **MotherDuck Token**: [Get one here](https://app.motherduck.com/)
 - **GCP Service Account**: [Create one here](https://console.cloud.google.com/iam-admin/serviceaccounts)
 
@@ -18,7 +18,7 @@ Analyze how weather affects NYC transportation patterns across 14M+ trips from Y
 
 ```bash
 # 1. Install Dependencies
-poetry install
+uv sync
 
 # 2. Configure Environment
 cp .env.template .env
@@ -26,10 +26,10 @@ cp .env.template .env
 
 # 3. Runs the full End-to-End Pipeline
 # Ingests to GCS Staging -> Loads to MotherDuck -> Transforms with dbt -> Validates
-poetry run dagster asset materialize --select \* -m orchestration
+uv run dagster asset materialize --select \* -m orchestration
 
 # 4. Explore Data
-poetry run marimo edit notebooks/marimo/01_exploration.py
+uv run marimo edit notebooks/marimo/01_exploration.py
 ```
 
 ---
@@ -86,24 +86,24 @@ Access them at your GCS bucket URL (e.g., `https://storage.googleapis.com/<bucke
 
 **Run Ingestion (Local Dev)**
 ```bash
-poetry run python src/ingestion/run_pipeline.py --year 2024 --months 1 --sources taxi
+uv run python src/ingestion/run_pipeline.py --year 2024 --months 1 --sources taxi
 ```
 
 **Run dbt Models**
 ```bash
 cd dbt
-poetry run dbt build --target prod
+uv run dbt build --target prod
 ```
 
 **Run Observability Report**
 ```bash
 cd dbt
-poetry run edr report
+uv run edr report
 ```
 
 **Start Dagster UI**
 ```bash
-poetry run dagster dev -m orchestration
+uv run dagster dev -m orchestration
 ```
 
 ---
@@ -132,4 +132,4 @@ nyc-mobility-weather-analytics/
 
 ---
 
-**Built with**: Python • dlt • MotherDuck • dbt • Dagster • Elementary • Marimo
+**Built with**: Python • uv • dlt • MotherDuck • dbt • Dagster • Elementary • Marimo

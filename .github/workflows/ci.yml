@@ -13,32 +13,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
       - name: Install dependencies
-        run: poetry install --with dev
+        run: uv sync --all-extras --dev
 
       - name: Lint Python (Ruff)
-        run: poetry run ruff check .
+        run: uv run ruff check .
 
       # - name: Lint SQL (SQLFluff)
-        # run: poetry run sqlfluff lint dbt/models --dialect duckdb
+      #   run: uv run sqlfluff lint dbt/models --dialect duckdb
 
       - name: Run Unit Tests
-        run: poetry run pytest
+        run: uv run pytest
 
       - name: Verify dbt Project (Parse)
         env:
           DBT_PROFILES_DIR: ./dbt
-        run: poetry run dbt parse --project-dir ./dbt
-
-      # - name: Validate Dagster Configuration
-        # run: poetry run dagster project validate-configuration -f dagster_cloud.yaml
+        run: uv run dbt parse --project-dir ./dbt

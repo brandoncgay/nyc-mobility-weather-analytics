@@ -37,22 +37,7 @@ monthly_ingestion_job = define_asset_job(
     name="monthly_ingestion",
     description="Load data for one month: DLT ingestion → dbt transformation (incremental) → validation. Use for forward-loading only.",
     selection=AssetSelection.groups("monthly_ingestion"),
-    config={
-        "ops": {
-            "monthly_dlt_ingestion": {
-                "config": {
-                    "year": 2025,
-                    "month": 10,
-                    "sources": "taxi,citibike,weather",
-                }
-            },
-            "monthly_dbt_transformation": {
-                "config": {
-                    "full_refresh": False,  # Incremental mode
-                }
-            }
-        }
-    },
+
 )
 
 # Backfill job: Load historical data with full refresh
@@ -84,20 +69,5 @@ backfill_monthly_data = define_asset_job(
     Full refresh processes all trips (~32M rows). Takes ~30 seconds in DuckDB.
     """,
     selection=AssetSelection.groups("monthly_ingestion"),
-    config={
-        "ops": {
-            "monthly_dlt_ingestion": {
-                "config": {
-                    "year": 2025,
-                    "month": 5,  # Example: backfill May
-                    "sources": "taxi,citibike,weather",
-                }
-            },
-            "monthly_dbt_transformation": {
-                "config": {
-                    "full_refresh": True,  # Required for backfills
-                }
-            }
-        }
-    },
+
 )

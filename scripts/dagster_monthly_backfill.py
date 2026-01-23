@@ -37,7 +37,7 @@ def load_month(year: int, month: int, sources: str = "taxi,citibike,weather") ->
     print(f"{'='*60}\n")
 
     instance = DagsterInstance.get()
-    job = defs.get_job_def("monthly_ingestion")
+    job = defs.resolve_job_def("monthly_ingestion")
 
     run_config = {
         "ops": {

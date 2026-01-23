@@ -47,6 +47,7 @@ defs = Definitions(
         dbt_analytics_assets,
         upload_documentation,
         # Monthly ingestion workflow assets
+        monthly_dlt_ingestion,
         monthly_dbt_transformation,
         monthly_data_validation,
     ],

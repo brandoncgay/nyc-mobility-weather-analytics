@@ -65,7 +65,7 @@ def monthly_dlt_ingestion(
 
     # Build command
     cmd = [
-        "poetry",
+        "uv",
         "run",
         "python",
         str(INGESTION_SCRIPT),
@@ -163,7 +163,7 @@ def monthly_dbt_transformation(
     dbt_dir = PROJECT_ROOT / "dbt"
 
     # Build dbt command
-    dbt_cmd = ["poetry", "run", "dbt", "run", "--select", "fct_trips", "fct_hourly_mobility"]
+    dbt_cmd = ["uv", "run", "dbt", "run", "--select", "fct_trips", "fct_hourly_mobility"]
 
     # Add full-refresh flag if configured (needed for backfills)
     if config.full_refresh:
